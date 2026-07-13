@@ -1,0 +1,36 @@
+<header class="admin-header">
+  <button
+    type="button"
+    class="admin-header__menu-btn"
+    aria-label="Open navigation menu"
+    (click)="menuToggle.emit()"
+  >
+    <app-icon [icon]="icons.menu" [size]="18" />
+  </button>
+
+  <div class="admin-header__search">
+    <input
+      class="admin-header__search-input"
+      type="search"
+      [placeholder]="searchPlaceholder"
+      aria-label="Search"
+    />
+  </div>
+
+  <div class="admin-header__actions">
+    <button type="button" class="admin-header__icon-btn admin-header__icon-btn--badge" aria-label="Notifications">
+      <app-icon [icon]="icons.bell" [size]="18" />
+    </button>
+    <button type="button" class="admin-header__icon-btn" aria-label="Toggle theme">
+      <app-icon [icon]="icons.sun" [size]="18" />
+    </button>
+
+    <div class="admin-header__profile">
+      <div class="admin-header__profile-text">
+        <p class="admin-header__profile-name">{{ userName }}</p>
+        <p class="admin-header__profile-role">{{ userRole }}</p>
+      </div>
+      <img class="admin-header__avatar" [src]="userAvatar" [alt]="userName" />
+    </div>
+  </div>
+</header>

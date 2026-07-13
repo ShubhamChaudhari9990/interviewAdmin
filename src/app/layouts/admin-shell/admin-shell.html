@@ -1,0 +1,32 @@
+<div
+  class="admin-shell dashboard-ui"
+  [class.admin-shell--sidebar-collapsed]="sidebarCollapsed()"
+  [class.admin-shell--mobile-nav-open]="mobileNavOpen()"
+>
+  @if (mobileNavOpen()) {
+    <button
+      type="button"
+      class="admin-shell__backdrop"
+      aria-label="Close navigation menu"
+      (click)="closeMobileNav()"
+    ></button>
+  }
+
+  <app-admin-sidebar
+    [collapsed]="sidebarCollapsed() && !mobileNavOpen()"
+    (toggleCollapse)="toggleSidebar()"
+  />
+
+  <div class="admin-main">
+    <app-admin-topbar
+      [searchPlaceholder]="topbar().searchPlaceholder"
+      [userName]="topbar().userName"
+      [userRole]="topbar().userRole"
+      [userAvatar]="topbar().userAvatar"
+      (menuToggle)="toggleMobileNav()"
+    />
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

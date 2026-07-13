@@ -1,0 +1,104 @@
+<section class="admin-page">
+  <div class="admin-kpi-grid">
+    @for (stat of kpiStats; track stat.label) {
+      <app-kpi-card [stat]="stat" />
+    }
+  </div>
+
+  <div class="admin-dashboard-grid">
+    <div class="admin-dashboard-main">
+      <article class="admin-card">
+        <div class="admin-card__header">
+          <div>
+            <h2 class="section-title">Monthly Interview Trend</h2>
+            <p class="page-subtitle">Visualizing candidate volume across regions</p>
+          </div>
+          <app-dropdown
+            [options]="periodOptions"
+            [(value)]="selectedPeriod"
+            width="10.5rem"
+            ariaLabel="Select period"
+          />
+        </div>
+        <div class="admin-card__body">
+          <app-monthly-trend-chart />
+        </div>
+      </article>
+
+      <article class="admin-card">
+        <div class="admin-card__header">
+          <h2 class="section-title">Recent Activity Timeline</h2>
+        </div>
+        <div class="admin-card__body">
+          @for (item of activityItems; track item.title) {
+            <article class="admin-activity-item">
+              <span
+                class="admin-activity-item__icon"
+                [class.admin-activity-item__icon--success]="item.tone === 'success'"
+                [class.admin-activity-item__icon--info]="item.tone === 'info'"
+                [class.admin-activity-item__icon--warning]="item.tone === 'warning'"
+              >
+                <app-icon [icon]="item.icon" [size]="16" />
+              </span>
+              <div>
+                <h3 class="subsection-title">{{ item.title }}</h3>
+                <p class="meta-text">{{ item.description }}</p>
+              </div>
+              <span class="meta-text">{{ item.time }}</span>
+            </article>
+          }
+        </div>
+      </article>
+    </div>
+
+    <div class="admin-dashboard-side">
+      <article class="admin-card">
+        <div class="admin-card__header">
+          <h2 class="section-title">Domain Distribution</h2>
+        </div>
+        <div class="admin-card__body">
+          @for (domain of domainStats; track domain.label) {
+            <div class="admin-domain-item">
+              <span class="label-text">{{ domain.label }}</span>
+              <span class="meta-text">{{ domain.value }}%</span>
+              <div class="admin-domain-item__bar">
+                <div
+                  class="admin-domain-item__bar-fill"
+                  [style.width.%]="domain.value"
+                  [style.background]="domain.color"
+                ></div>
+              </div>
+            </div>
+          }
+          <div style="margin-top: 0.5rem">
+            <app-button variant="outline" [fullWidth]="true">View Detailed Report</app-button>
+          </div>
+        </div>
+      </article>
+
+      <article class="admin-card">
+        <div class="admin-card__header">
+          <h2 class="section-title">Quick Actions</h2>
+        </div>
+        <div class="admin-card__body">
+          <div class="admin-quick-actions">
+            @for (action of quickActions; track action.label) {
+              <button type="button" class="admin-quick-action">
+                <app-icon [icon]="action.icon" [size]="20" />
+                <span>{{ action.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      </article>
+
+      <article class="admin-promo-card">
+        <h3 class="admin-promo-card__title">New AI Model Available</h3>
+        <p class="admin-promo-card__text">
+          Claude 3.5 Sonnet is now integrated for technical assessments.
+        </p>
+        <a href="#" class="admin-promo-card__link">Update Prompts</a>
+      </article>
+    </div>
+  </div>
+</section>

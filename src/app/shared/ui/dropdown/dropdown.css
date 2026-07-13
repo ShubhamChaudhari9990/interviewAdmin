@@ -1,0 +1,100 @@
+.app-dropdown {
+  display: block;
+  width: var(--dropdown-width, 9.5rem);
+}
+
+.app-dropdown--full {
+  width: 100%;
+}
+
+.app-dropdown__select.p-select {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: none;
+  transition: border-color var(--transition-default), outline-color var(--transition-default);
+}
+
+.app-dropdown__select.p-select:not(.p-disabled):hover {
+  border-color: #cbd5e1;
+}
+
+.app-dropdown__select.p-select.p-focus {
+  outline: 2px solid rgba(53, 37, 205, 0.2);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.app-dropdown__select.p-select.p-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.app-dropdown__select .p-select-label {
+  padding: 0.5rem 0.875rem;
+  font-family: var(--font-sans);
+  font-size: var(--type-sm);
+  line-height: 1.25;
+  color: var(--text-heading);
+}
+
+.app-dropdown__select .p-select-dropdown {
+  width: 2rem;
+  color: var(--text-faint);
+}
+
+.app-dropdown__select .p-select-dropdown-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.app-dropdown__panel.p-select-overlay {
+  margin-top: 0.25rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-default);
+  overflow: hidden;
+}
+
+.app-dropdown__panel .p-select-list-container {
+  max-height: 16rem;
+}
+
+.app-dropdown__panel .p-select-list {
+  padding: 0.375rem;
+}
+
+.app-dropdown__panel .p-select-option {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: var(--type-sm);
+  color: var(--text-body);
+  transition: background-color var(--transition-default), color var(--transition-default);
+}
+
+.app-dropdown__panel .p-select-option:not(.p-disabled).p-focus {
+  background: #f1f5f9;
+  color: var(--text-heading);
+}
+
+.app-dropdown__panel .p-select-option.p-select-option-selected {
+  background: rgba(53, 37, 205, 0.08);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.app-dropdown__panel .p-select-option.p-select-option-selected.p-focus {
+  background: rgba(53, 37, 205, 0.12);
+}
+
+@media (max-width: 768px) {
+  .app-dropdown {
+    width: 100%;
+    --dropdown-width: 100%;
+  }
+}

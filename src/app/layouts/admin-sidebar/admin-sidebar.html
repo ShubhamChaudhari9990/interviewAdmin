@@ -1,0 +1,61 @@
+<aside class="admin-sidebar" [class.admin-sidebar--collapsed]="collapsed">
+  <div class="admin-sidebar__brand">
+    @if (!collapsed) {
+      <div class="admin-sidebar__brand-text">
+        <h1 class="admin-sidebar__logo">{{ productName }}</h1>
+        <p class="admin-sidebar__tagline">Enterprise Admin</p>
+      </div>
+    }
+
+    <app-tooltip
+      [text]="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      position="right"
+    >
+      <button
+        type="button"
+        class="admin-sidebar__toggle"
+        [attr.aria-label]="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        [attr.aria-expanded]="!collapsed"
+        (click)="toggleCollapse.emit()"
+      >
+        <app-icon [icon]="collapsed ? icons.chevronRight : icons.chevronLeft" [size]="18" />
+      </button>
+    </app-tooltip>
+  </div>
+
+  <nav class="admin-sidebar__nav" aria-label="Main navigation">
+    @for (item of mainNav; track item.route) {
+      <app-tooltip [text]="item.label" position="right" [disabled]="!collapsed" [inline]="false">
+        <a
+          class="admin-sidebar__link"
+          [routerLink]="item.route"
+          routerLinkActive="admin-sidebar__link--active"
+          [attr.aria-label]="collapsed ? item.label : null"
+        >
+          <app-icon [icon]="item.icon" [size]="18" />
+          @if (!collapsed) {
+            <span>{{ item.label }}</span>
+          }
+        </a>
+      </app-tooltip>
+    }
+  </nav>
+
+  <div class="admin-sidebar__footer">
+    @for (item of footerNav; track item.route) {
+      <app-tooltip [text]="item.label" position="right" [disabled]="!collapsed" [inline]="false">
+        <a
+          class="admin-sidebar__link"
+          [class.admin-sidebar__link--danger]="item.danger"
+          [routerLink]="item.route"
+          [attr.aria-label]="collapsed ? item.label : null"
+        >
+          <app-icon [icon]="item.icon" [size]="18" />
+          @if (!collapsed) {
+            <span>{{ item.label }}</span>
+          }
+        </a>
+      </app-tooltip>
+    }
+  </div>
+</aside>

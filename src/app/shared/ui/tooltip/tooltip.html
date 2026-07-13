@@ -1,0 +1,17 @@
+<span
+  class="app-tooltip-host"
+  [class.app-tooltip-host--block]="!inline"
+  [pTooltip]="text"
+  [tooltipPosition]="position"
+  [tooltipEvent]="event"
+  [showDelay]="showDelay"
+  [hideDelay]="hideDelay"
+  [tooltipDisabled]="disabled || !text"
+  [escape]="escape"
+  [fitContent]="fitContent"
+  [hideOnEscape]="hideOnEscape"
+  tooltipStyleClass="app-tooltip"
+  appendTo="body"
+>
+  <ng-content />
+</span>

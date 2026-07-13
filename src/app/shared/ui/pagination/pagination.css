@@ -1,0 +1,41 @@
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.admin-pagination__summary {
+  margin: 0;
+  font-size: var(--type-xs);
+  color: var(--text-subtle);
+}
+
+.admin-pagination__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .admin-pagination {
+    padding: 0.875rem 1rem;
+  }
+
+  .admin-pagination__summary {
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-pagination__controls {
+    justify-content: center;
+  }
+}

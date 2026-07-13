@@ -1,0 +1,42 @@
+<footer class="admin-pagination">
+  <p class="admin-pagination__summary">{{ summary }}</p>
+
+  <div class="admin-pagination__controls">
+    @if (navMode === 'icon') {
+      <app-button
+        variant="outline"
+        [icon]="icons.chevronLeft"
+        ariaLabel="Previous page"
+        [disabled]="isFirstPage"
+        (click)="goPrevious()"
+      />
+    } @else {
+      <app-button variant="outline" [disabled]="isFirstPage" (click)="goPrevious()">
+        Previous
+      </app-button>
+    }
+
+    @for (page of pages; track page) {
+      <app-button
+        [variant]="page === currentPage ? 'primary' : 'outline'"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </app-button>
+    }
+
+    @if (navMode === 'icon') {
+      <app-button
+        variant="outline"
+        [icon]="icons.chevronRight"
+        ariaLabel="Next page"
+        [disabled]="isLastPage"
+        (click)="goNext()"
+      />
+    } @else {
+      <app-button variant="outline" [disabled]="isLastPage" (click)="goNext()">
+        Next
+      </app-button>
+    }
+  </div>
+</footer>

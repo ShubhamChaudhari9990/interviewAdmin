@@ -1,0 +1,161 @@
+<section class="admin-page">
+  <div class="interviews-hero">
+    <article class="admin-card interviews-hero__main">
+      <h1 class="page-title interviews-hero__title">Interviews</h1>
+      <p class="page-subtitle interviews-hero__subtitle">
+        Manage AI-led candidate screenings and review performance metrics.
+      </p>
+
+      <div class="interviews-hero__metrics">
+        <div class="interviews-hero__metric">
+          <span class="interviews-hero__metric-label">Pending Reviews</span>
+          <strong class="interviews-hero__metric-value">{{ summary.pendingReviews }}</strong>
+        </div>
+        <div class="interviews-hero__metric">
+          <span class="interviews-hero__metric-label">Total This Month</span>
+          <strong class="interviews-hero__metric-value">{{ summary.totalThisMonth | number }}</strong>
+        </div>
+      </div>
+    </article>
+
+    <div class="interviews-stats-grid">
+      @for (stat of stats; track stat.label) {
+        <article class="interviews-stat-card">
+          <span class="interviews-stat-card__icon" [class]="statIconTone(stat.tone)">
+            <app-icon [icon]="stat.icon" [size]="18" />
+          </span>
+          <div>
+            <p class="interviews-stat-card__label">{{ stat.label }}</p>
+            <p class="interviews-stat-card__value">{{ stat.value }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+
+  <article class="admin-card">
+    <div class="interviews-toolbar">
+      <div class="admin-segmented" role="tablist" aria-label="Interview filters">
+        @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            class="admin-segmented__item"
+            [class.admin-segmented__item--active]="activeTab() === tab.id"
+            (click)="setTab(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      <div class="interviews-toolbar__actions">
+        <app-button variant="outline" [icon]="icons.filters">Filters</app-button>
+        <app-button variant="ghost" [icon]="icons.download">Export List</app-button>
+      </div>
+    </div>
+
+    <div class="admin-table-scroll">
+    <p-table [value]="filteredInterviews()" [tableStyle]="{ 'min-width': '68rem' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="tbl-head">Interview ID</th>
+          <th class="tbl-head">Candidate</th>
+          <th class="tbl-head">Domain / Role</th>
+          <th class="tbl-head">Type</th>
+          <th class="tbl-head">Score</th>
+          <th class="tbl-head">Duration</th>
+          <th class="tbl-head">Status</th>
+          <th class="tbl-head">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-interview>
+        <tr>
+          <td class="tbl-cell">{{ interview.id }}</td>
+          <td>
+            <div class="interviews-candidate">
+              <span
+                class="interviews-candidate__avatar"
+                [style.background]="interview.candidateColor"
+              >
+                {{ interview.candidateInitials }}
+              </span>
+              <div>
+                <div class="subsection-title">{{ interview.candidateName }}</div>
+                <div class="meta-text">{{ interview.candidateEmail }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="tbl-cell">
+            <div>{{ interview.domain }} —</div>
+            <div class="meta-text">{{ interview.role }}</div>
+          </td>
+          <td>
+            <span class="interviews-type">
+              <app-icon [icon]="typeIcon(interview.type)" [size]="15" />
+              {{ interview.type }}
+            </span>
+          </td>
+          <td>
+            <span class="admin-badge" [class]="scoreClass(interview.scoreLevel)">
+              {{ scoreLabel(interview) }}
+            </span>
+          </td>
+          <td class="tbl-cell">{{ interview.duration }}</td>
+          <td>
+            <span class="admin-badge" [class]="statusClass(interview.status)">
+              {{ interview.status }}
+            </span>
+          </td>
+          <td>
+            @if (interview.status === 'In Progress') {
+              <app-button variant="outline">Monitor Live</app-button>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    </div>
+
+    <app-pagination
+      [currentPage]="currentPage"
+      [pageSize]="10"
+      [totalItems]="totalEntries"
+      itemLabel="entries"
+      [pages]="paginationPages"
+      navMode="icon"
+      (pageChange)="currentPage = $event"
+    />
+  </article>
+
+  <div class="interviews-footer-cards">
+    <article class="interviews-calibration-card">
+      <span class="interviews-calibration-card__badge">PRO TIP: AI CALIBRATION</span>
+      <h2 class="interviews-calibration-card__title">Automated Bias Detection is Active</h2>
+      <p class="interviews-calibration-card__text">
+        Our models are currently flagging a 1.4% deviation in scoring consistency across
+        non-technical roles. Review the latest calibration report to ensure fairness.
+      </p>
+      <div class="interviews-calibration-card__actions">
+        <app-button variant="white">Detailed Report</app-button>
+        <app-button variant="white-outline">Calibrate Models</app-button>
+      </div>
+      <app-icon
+        class="interviews-calibration-card__gear"
+        [icon]="icons.gear"
+        [size]="120"
+        color="#ffffff"
+      />
+    </article>
+
+    <article class="admin-card interviews-suggestion-card">
+      <span class="interviews-suggestion-card__icon">
+        <app-icon [icon]="icons.sparkles" [size]="20" />
+      </span>
+      <h3 class="interviews-suggestion-card__title">Suggested Action</h3>
+      <p class="interviews-suggestion-card__text">
+        Review interview #INT-9405 for Marcus Chen. Score dropped 15% below domain average.
+      </p>
+      <app-button variant="soft" [fullWidth]="true">Start Review</app-button>
+    </article>
+  </div>
+</section>
