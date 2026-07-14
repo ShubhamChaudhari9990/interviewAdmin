@@ -22,6 +22,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/interviews/interviews.routes').then((m) => m.interviewsRoutes),
       },
+      {
+        path: 'master-data',
+        loadChildren: () =>
+          import('./features/master-data/master-data.routes').then((m) => m.masterDataRoutes),
+      },
       { path: '**', redirectTo: 'dashboard' },
     ],
   },

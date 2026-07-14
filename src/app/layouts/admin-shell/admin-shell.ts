@@ -33,9 +33,20 @@ const INTERVIEWS_TOPBAR: TopbarConfig = {
   userAvatar: 'https://i.pravatar.cc/80?u=sarah-admin',
 };
 
+const MASTER_DATA_TOPBAR: TopbarConfig = {
+  searchPlaceholder: 'Search interview domains...',
+  userName: 'Sarah Connor',
+  userRole: 'Super Admin',
+  userAvatar: 'https://i.pravatar.cc/80?u=sarah-admin',
+};
+
 function resolveTopbar(url: string): TopbarConfig {
   if (url.startsWith('/interviews')) {
     return INTERVIEWS_TOPBAR;
+  }
+
+  if (url.startsWith('/master-data')) {
+    return MASTER_DATA_TOPBAR;
   }
 
   if (url.startsWith('/users')) {

@@ -9,7 +9,8 @@ export type ButtonVariant =
   | 'ghost'
   | 'white'
   | 'white-outline'
-  | 'soft';
+  | 'soft'
+  | 'danger';
 
 @Component({
   selector: 'app-button',
@@ -20,6 +21,7 @@ export type ButtonVariant =
       [class]="hostClass"
       [disabled]="disabled"
       [attr.aria-label]="ariaLabel"
+      [attr.form]="form || null"
     >
       @if (icon) {
         <app-icon [icon]="icon" [size]="iconSize" [color]="iconColor" />
@@ -37,6 +39,8 @@ export class AppButton {
   @Input() disabled = false;
   @Input() ariaLabel?: string;
   @Input() fullWidth = false;
+  /** Associates a submit button with a form outside the button's DOM tree. */
+  @Input() form?: string;
 
   get hostClass(): string {
     if (this.variant === 'icon') {

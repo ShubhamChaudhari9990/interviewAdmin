@@ -290,6 +290,12 @@
   color: #2563eb;
 }
 
+.admin-btn--danger {
+  border: 0;
+  background: var(--danger);
+  color: #fff;
+}
+
 .admin-card {
   background: var(--color-surface);
   border: 1px solid var(--card-border);

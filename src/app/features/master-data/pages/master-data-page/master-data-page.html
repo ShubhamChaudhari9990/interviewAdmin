@@ -1,0 +1,307 @@
+<section class="admin-page">
+  <p class="admin-breadcrumb">Admin &gt; Master Data</p>
+
+  <div class="admin-page-header">
+    <div>
+      <h1 class="page-title">
+        Interview Domains
+        <span class="admin-page-header__count">{{ domains().length }}</span>
+      </h1>
+      <p class="page-subtitle master-data-subtitle">
+        Manage the options shown in the user-facing
+        <strong>Type of Interview</strong> dropdown. New domains appear for candidates immediately.
+      </p>
+    </div>
+    <div class="admin-page-actions">
+      <app-button
+        variant="primary"
+        [icon]="icons.add"
+        iconColor="#ffffff"
+        (click)="openCreate()"
+      >
+        Add Domain
+      </app-button>
+    </div>
+  </div>
+
+  <div class="master-data-layout">
+    <div class="master-data-main">
+      <div class="master-data-kpis">
+        <article class="admin-card admin-kpi-card">
+          <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__icon">
+              <app-icon [icon]="icons.listChecks" [size]="18" />
+            </span>
+          </div>
+          <strong class="stat-value">{{ domains().length }}</strong>
+          <p class="stat-label">Total domains</p>
+        </article>
+        <article class="admin-card admin-kpi-card">
+          <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__icon">
+              <app-icon [icon]="icons.checkCircle" [size]="18" />
+            </span>
+          </div>
+          <strong class="stat-value">{{ activeCount() }}</strong>
+          <p class="stat-label">Active in dropdown</p>
+        </article>
+        <article class="admin-card admin-kpi-card">
+          <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__icon">
+              <app-icon [icon]="icons.fileText" [size]="18" />
+            </span>
+          </div>
+          <strong class="stat-value">{{ filteredDomains().length }}</strong>
+          <p class="stat-label">Showing now</p>
+        </article>
+      </div>
+
+      <article class="admin-card master-data-table-card">
+        <div class="admin-filters">
+          <div class="admin-filters__search">
+            <input
+              type="search"
+              placeholder="Search domains..."
+              [value]="searchQuery()"
+              (input)="onSearchInput($event)"
+            />
+          </div>
+        </div>
+
+        <div class="admin-table-scroll">
+          <p-table [value]="filteredDomains()" [tableStyle]="{ 'min-width': '48rem' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="tbl-head">Domain</th>
+                <th class="tbl-head">Status</th>
+                <th class="tbl-head">Order</th>
+                <th class="tbl-head">Usage</th>
+                <th class="tbl-head">Updated</th>
+                <th class="tbl-head">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-domain>
+              <tr>
+                <td>
+                  <div class="master-data-domain">
+                    <span class="master-data-domain__icon">
+                      <app-icon [icon]="icons.fileText" [size]="16" />
+                    </span>
+                    <div>
+                      <div class="subsection-title">{{ domain.name }}</div>
+                      <div class="meta-text">{{ domain.description }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="admin-badge master-data-status-toggle"
+                    [class]="statusClass(domain.status)"
+                    (click)="toggleStatus(domain)"
+                    [attr.aria-label]="'Toggle status for ' + domain.name"
+                  >
+                    {{ domain.status }}
+                  </button>
+                </td>
+                <td class="tbl-cell">{{ domain.sortOrder }}</td>
+                <td class="tbl-cell">{{ domain.usageCount }} interviews</td>
+                <td class="tbl-cell">{{ domain.updatedAt }}</td>
+                <td>
+                  <div class="master-data-actions">
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.edit"
+                      ariaLabel="Edit domain"
+                      (click)="openEdit(domain)"
+                    />
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.trash"
+                      ariaLabel="Delete domain"
+                      (click)="openDelete(domain)"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="master-data-empty">
+                  No interview domains match your search. Add a new domain to get started.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </article>
+    </div>
+
+    <aside
+      class="admin-card master-data-preview"
+      [class.master-data-preview--collapsed]="!previewOpen()"
+    >
+      <div class="master-data-preview__header">
+        <div>
+          <p class="master-data-preview__eyebrow">User frontend preview</p>
+          <h3 class="subsection-title">Type of Interview</h3>
+        </div>
+        <app-button
+          variant="icon"
+          [icon]="previewOpen() ? icons.chevronUp : icons.chevronDown"
+          ariaLabel="Toggle preview"
+          (click)="previewOpen.set(!previewOpen())"
+        />
+      </div>
+
+      @if (previewOpen()) {
+        <div class="master-data-preview__select" aria-hidden="true">
+          <span class="master-data-preview__select-icon">
+            <app-icon [icon]="icons.fileText" [size]="16" />
+          </span>
+          <span class="master-data-preview__select-value">
+            {{ filteredDomains()[0]?.name || 'Select Interview Type' }}
+          </span>
+          <app-icon [icon]="icons.chevronUp" [size]="16" />
+        </div>
+
+        <ul class="master-data-preview__list">
+          <li class="master-data-preview__placeholder">Select Interview Type</li>
+          @for (domain of filteredDomains(); track domain.id) {
+            @if (domain.status === 'Active') {
+              <li
+                class="master-data-preview__item"
+                [class.master-data-preview__item--selected]="$first"
+              >
+                <span>{{ domain.name }}</span>
+                @if ($first) {
+                  <app-icon [icon]="icons.check" [size]="15" />
+                }
+              </li>
+            }
+          }
+        </ul>
+
+        <p class="master-data-preview__hint meta-text">
+          Only <strong>Active</strong> domains appear in this dropdown for candidates.
+        </p>
+      }
+    </aside>
+  </div>
+</section>
+
+<app-modal
+  [open]="formModalOpen()"
+  [title]="formModalTitle()"
+  [subtitle]="formModalSubtitle()"
+  size="md"
+  (closed)="closeModal()"
+>
+  <form id="domainForm" class="master-data-form" (ngSubmit)="saveDomain()">
+    <div class="master-data-form__grid">
+      <label class="master-data-field">
+        <span class="master-data-field__label">
+          Domain name <span class="required">*</span>
+        </span>
+        <input
+          class="master-data-field__input"
+          type="text"
+          [ngModel]="form().name"
+          (ngModelChange)="updateFormField('name', $event)"
+          name="domainName"
+          placeholder="e.g. Frontend, Product Management"
+          autocomplete="off"
+          maxlength="60"
+        />
+      </label>
+
+      <fieldset class="master-data-field">
+        <legend class="master-data-field__label">Status</legend>
+        <div class="master-data-radios" role="radiogroup" aria-label="Domain status">
+          <label class="master-data-radio">
+            <input
+              type="radio"
+              name="domainStatus"
+              value="Active"
+              [ngModel]="form().status"
+              (ngModelChange)="updateFormField('status', $event)"
+            />
+            <span>Active</span>
+          </label>
+          <label class="master-data-radio">
+            <input
+              type="radio"
+              name="domainStatus"
+              value="Inactive"
+              [ngModel]="form().status"
+              (ngModelChange)="updateFormField('status', $event)"
+            />
+            <span>Inactive</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <label class="master-data-field master-data-field--full">
+        <span class="master-data-field__label">Description</span>
+        <textarea
+          class="master-data-field__input master-data-field__textarea"
+          [ngModel]="form().description"
+          (ngModelChange)="updateFormField('description', $event)"
+          name="domainDescription"
+          placeholder="Short note for admins (optional)"
+          rows="3"
+          maxlength="200"
+        ></textarea>
+      </label>
+    </div>
+
+    @if (formError()) {
+      <p class="master-data-form__error" role="alert">{{ formError() }}</p>
+    }
+  </form>
+
+  <div modalFooter>
+    <app-button variant="outline" type="button" (click)="closeModal()">Cancel</app-button>
+    <app-button
+      variant="primary"
+      type="submit"
+      form="domainForm"
+      iconColor="#ffffff"
+      [icon]="icons.check"
+    >
+      {{ formSubmitLabel() }}
+    </app-button>
+  </div>
+</app-modal>
+
+<app-modal
+  [open]="deleteModalOpen()"
+  title="Delete Interview Domain"
+  [subtitle]="deleteModalSubtitle()"
+  size="sm"
+  (closed)="closeModal()"
+>
+  <div class="master-data-delete">
+    <span class="master-data-delete__icon">
+      <app-icon [icon]="icons.trash" [size]="22" />
+    </span>
+    <p class="body-text">
+      Candidates will no longer be able to select
+      <strong>{{ deletingDomain()?.name }}</strong>
+      when starting an interview. This action cannot be undone.
+    </p>
+  </div>
+
+  <div modalFooter>
+    <app-button variant="outline" type="button" (click)="closeModal()">Cancel</app-button>
+    <app-button
+      variant="danger"
+      type="button"
+      iconColor="#ffffff"
+      [icon]="icons.trash"
+      (click)="confirmDelete()"
+    >
+      Delete Domain
+    </app-button>
+  </div>
+</app-modal>

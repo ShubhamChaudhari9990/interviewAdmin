@@ -1,0 +1,50 @@
+@if (open) {
+  <div class="app-modal" role="presentation">
+    <button
+      type="button"
+      class="app-modal__backdrop"
+      aria-label="Close dialog"
+      (click)="onBackdropClick()"
+    ></button>
+
+    <div
+      class="app-modal__dialog"
+      [class.app-modal__dialog--sm]="size === 'sm'"
+      [class.app-modal__dialog--md]="size === 'md'"
+      [class.app-modal__dialog--lg]="size === 'lg'"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="title ? 'app-modal-title' : null"
+      [attr.aria-describedby]="subtitle ? 'app-modal-subtitle' : null"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="app-modal__header">
+        <div class="app-modal__heading">
+          @if (title) {
+            <h2 class="modal-title" id="app-modal-title">{{ title }}</h2>
+          }
+          @if (subtitle) {
+            <p class="modal-subtitle" id="app-modal-subtitle">{{ subtitle }}</p>
+          }
+        </div>
+
+        @if (showCloseButton) {
+          <app-button
+            variant="icon"
+            [icon]="icons.close"
+            ariaLabel="Close dialog"
+            (click)="close()"
+          />
+        }
+      </header>
+
+      <div class="app-modal__body">
+        <ng-content />
+      </div>
+
+      <footer class="app-modal__footer">
+        <ng-content select="[modalFooter]" />
+      </footer>
+    </div>
+  </div>
+}

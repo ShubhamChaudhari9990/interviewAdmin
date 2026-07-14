@@ -4,6 +4,8 @@ export { AppDropdown } from './dropdown/dropdown';
 export { AppIcon, AppIcons, APP_ICONS } from './icon/icon';
 export type { AppIconDefinition } from './icon/icon';
 export { KpiCard } from './kpi-card/kpi-card';
+export { AppModal } from './modal/modal';
+export type { ModalSize } from './modal/modal';
 export { AppPagination } from './pagination/pagination';
 export type { PaginationNavMode } from './pagination/pagination';
 export { AppTooltip } from './tooltip/tooltip';
