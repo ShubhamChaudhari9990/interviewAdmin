@@ -1,0 +1,48 @@
+<footer
+  class="flex flex-col items-stretch justify-between gap-4 border-t border-[var(--card-border)] p-4 sm:flex-row sm:items-center md:px-5"
+>
+  <p class="m-0 text-center text-[length:var(--type-xs)] text-[var(--text-subtle)] sm:text-left">
+    {{ summary }}
+  </p>
+
+  <div
+    class="flex flex-wrap justify-center gap-2 sm:justify-end [&>app-button:not(:first-child):not(:last-child)]:max-sm:hidden"
+  >
+    @if (navMode === 'icon') {
+      <app-button
+        variant="outline"
+        [icon]="icons.chevronLeft"
+        ariaLabel="Previous page"
+        [disabled]="isFirstPage"
+        (click)="goPrevious()"
+      />
+    } @else {
+      <app-button variant="outline" [disabled]="isFirstPage" (click)="goPrevious()">
+        Previous
+      </app-button>
+    }
+
+    @for (page of pages; track page) {
+      <app-button
+        [variant]="page === currentPage ? 'primary' : 'outline'"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </app-button>
+    }
+
+    @if (navMode === 'icon') {
+      <app-button
+        variant="outline"
+        [icon]="icons.chevronRight"
+        ariaLabel="Next page"
+        [disabled]="isLastPage"
+        (click)="goNext()"
+      />
+    } @else {
+      <app-button variant="outline" [disabled]="isLastPage" (click)="goNext()">
+        Next
+      </app-button>
+    }
+  </div>
+</footer>

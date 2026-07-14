@@ -1,0 +1,29 @@
+/* Projected footer slot — keep minimal; layout lives on [modalFooter] via Tailwind. */
+.app-modal__footer:not(:has(*)) {
+  display: none;
+}
+
+.app-modal__footer:has(*) {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.app-modal__footer [modalFooter] {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .app-modal__footer [modalFooter] > app-button {
+    flex: 1 1 calc(50% - 0.375rem);
+  }
+
+  .app-modal__footer [modalFooter] .admin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

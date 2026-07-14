@@ -1,0 +1,49 @@
+/* Admin shell leftovers — only what Tailwind can't cleanly express. */
+
+.admin-shell--sidebar-collapsed {
+  --sidebar-width: var(--sidebar-width-collapsed);
+}
+
+.admin-search-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0.75rem center;
+}
+
+@media (min-width: 769px) {
+  .admin-shell--sidebar-collapsed .admin-sidebar {
+    width: var(--sidebar-width-collapsed) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-shell--mobile-nav-open {
+    overflow: hidden;
+  }
+
+  .admin-sidebar {
+    width: min(85vw, 268px) !important;
+    transform: translateX(-100%);
+    transition:
+      transform var(--transition-default),
+      width var(--transition-default);
+    box-shadow: none;
+  }
+
+  .admin-shell--mobile-nav-open .admin-sidebar {
+    transform: translateX(0);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+  }
+
+  .admin-sidebar__toggle {
+    display: none;
+  }
+
+  .admin-shell--mobile-nav-open .admin-sidebar__toggle {
+    display: inline-flex;
+  }
+
+  .admin-shell--sidebar-collapsed {
+    --sidebar-width: 268px;
+  }
+}

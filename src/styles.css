@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@import '@angular/material/prebuilt-themes/magenta-violet.css';
+@import './styles/global.css';
+@import './styles/admin-shell.css';
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--text-heading);
+}

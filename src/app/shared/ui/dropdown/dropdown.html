@@ -1,0 +1,18 @@
+<div
+  class="block w-[var(--dropdown-width,9.5rem)] max-md:w-full max-md:[--dropdown-width:100%]"
+  [class.w-full]="fullWidth"
+  [style.--dropdown-width]="fullWidth ? '100%' : width"
+>
+  <p-select
+    [options]="options"
+    optionLabel="label"
+    optionValue="value"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [disabled]="disabled"
+    [attr.aria-label]="ariaLabel"
+    appendTo="body"
+    styleClass="app-dropdown__select"
+    panelStyleClass="app-dropdown__panel"
+  />
+</div>

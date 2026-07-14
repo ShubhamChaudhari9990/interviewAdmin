@@ -1,0 +1,18 @@
+<span
+  class="inline-flex max-w-full"
+  [class.flex]="!inline"
+  [class.w-full]="!inline"
+  [pTooltip]="text"
+  [tooltipPosition]="position"
+  [tooltipEvent]="event"
+  [showDelay]="showDelay"
+  [hideDelay]="hideDelay"
+  [tooltipDisabled]="disabled || !text"
+  [escape]="escape"
+  [fitContent]="fitContent"
+  [hideOnEscape]="hideOnEscape"
+  tooltipStyleClass="app-tooltip"
+  appendTo="body"
+>
+  <ng-content />
+</span>

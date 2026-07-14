@@ -1,0 +1,216 @@
+<section class="mx-auto flex w-full max-w-[var(--max-page-width)] flex-col gap-[var(--content-gap)]">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.8fr)]">
+    <article
+      class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-4 shadow-[var(--card-shadow)] md:p-6"
+    >
+      <h1 class="page-title mb-2">Interviews</h1>
+      <p class="page-subtitle mb-5 max-w-lg">
+        Manage AI-led candidate screenings and review performance metrics.
+      </p>
+
+      <div class="flex flex-wrap gap-3">
+        <div
+          class="min-w-0 flex-1 rounded-xl border border-[var(--card-border)] bg-slate-50 px-4 py-3 sm:min-w-40 sm:flex-none"
+        >
+          <span
+            class="mb-1 block text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+          >
+            Pending Reviews
+          </span>
+          <strong class="text-[length:var(--type-xl)] font-bold text-[var(--text-heading)]">
+            {{ summary.pendingReviews }}
+          </strong>
+        </div>
+        <div
+          class="min-w-0 flex-1 rounded-xl border border-[var(--card-border)] bg-slate-50 px-4 py-3 sm:min-w-40 sm:flex-none"
+        >
+          <span
+            class="mb-1 block text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+          >
+            Total This Month
+          </span>
+          <strong class="text-[length:var(--type-xl)] font-bold text-[var(--text-heading)]">
+            {{ summary.totalThisMonth | number }}
+          </strong>
+        </div>
+      </div>
+    </article>
+
+    <div class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2">
+      @for (stat of stats; track stat.label) {
+        <article
+          class="flex items-center gap-3 rounded-[0.875rem] border border-[var(--card-border)] bg-[var(--color-surface)] p-4"
+        >
+          <span
+            class="inline-flex size-9 items-center justify-center rounded-[0.65rem]"
+            [class]="statIconTone(stat.tone)"
+          >
+            <app-icon [icon]="stat.icon" [size]="18" />
+          </span>
+          <div>
+            <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">{{ stat.label }}</p>
+            <p class="m-0 text-[length:var(--type-lg)] font-bold text-[var(--text-heading)]">
+              {{ stat.value }}
+            </p>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+
+  <article
+    class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] shadow-[var(--card-shadow)]"
+  >
+    <div
+      class="flex flex-col items-stretch justify-between gap-4 border-b border-[var(--card-border)] p-4 md:flex-row md:items-center md:px-5"
+    >
+      <div
+        class="inline-flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 [-webkit-overflow-scrolling:touch]"
+        role="tablist"
+        aria-label="Interview filters"
+      >
+        @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            class="shrink-0 cursor-pointer rounded-[0.6rem] border-0 bg-transparent px-3.5 py-2 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] font-medium whitespace-nowrap text-[var(--text-muted)]"
+            [class.bg-[var(--color-surface)]]="activeTab() === tab.id"
+            [class.text-[var(--text-heading)]]="activeTab() === tab.id"
+            [class.shadow-sm]="activeTab() === tab.id"
+            (click)="setTab(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 [&_app-button]:max-md:flex-1 [&_.admin-btn]:max-md:w-full [&_.admin-btn]:max-md:justify-center">
+        <app-button variant="outline" [icon]="icons.filters">Filters</app-button>
+        <app-button variant="ghost" [icon]="icons.download">Export List</app-button>
+      </div>
+    </div>
+
+    <div class="admin-table-scroll">
+      <p-table [value]="filteredInterviews()" [tableStyle]="{ 'min-width': '68rem' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="tbl-head">Interview ID</th>
+            <th class="tbl-head">Candidate</th>
+            <th class="tbl-head">Domain / Role</th>
+            <th class="tbl-head">Type</th>
+            <th class="tbl-head">Score</th>
+            <th class="tbl-head">Duration</th>
+            <th class="tbl-head">Status</th>
+            <th class="tbl-head">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-interview>
+          <tr>
+            <td class="tbl-cell">{{ interview.id }}</td>
+            <td>
+              <div class="flex items-center gap-3">
+                <span
+                  class="inline-flex size-9 items-center justify-center rounded-full text-[length:var(--type-xs)] font-bold text-slate-700"
+                  [style.background]="interview.candidateColor"
+                >
+                  {{ interview.candidateInitials }}
+                </span>
+                <div>
+                  <div class="subsection-title">{{ interview.candidateName }}</div>
+                  <div class="meta-text">{{ interview.candidateEmail }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="tbl-cell">
+              <div>{{ interview.domain }} —</div>
+              <div class="meta-text">{{ interview.role }}</div>
+            </td>
+            <td>
+              <span class="inline-flex items-center gap-1.5 text-[length:var(--type-sm)] text-[var(--text-body)]">
+                <app-icon [icon]="typeIcon(interview.type)" [size]="15" />
+                {{ interview.type }}
+              </span>
+            </td>
+            <td>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[length:var(--type-xs)] font-semibold"
+                [class]="scoreClass(interview.scoreLevel)"
+              >
+                {{ scoreLabel(interview) }}
+              </span>
+            </td>
+            <td class="tbl-cell">{{ interview.duration }}</td>
+            <td>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[length:var(--type-xs)] font-semibold"
+                [class]="statusClass(interview.status)"
+              >
+                {{ interview.status }}
+              </span>
+            </td>
+            <td>
+              @if (interview.status === 'In Progress') {
+                <app-button variant="outline">Monitor Live</app-button>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <app-pagination
+      [currentPage]="currentPage"
+      [pageSize]="10"
+      [totalItems]="totalEntries"
+      itemLabel="entries"
+      [pages]="paginationPages"
+      navMode="icon"
+      (pageChange)="currentPage = $event"
+    />
+  </article>
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+    <article
+      class="relative overflow-hidden rounded-[var(--shell-radius)] bg-gradient-to-br from-[#3525cd] via-indigo-600 to-indigo-400 p-4 text-white md:p-6"
+    >
+      <span
+        class="mb-3 inline-block rounded px-2 py-0.5 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] bg-white/15"
+      >
+        PRO TIP: AI CALIBRATION
+      </span>
+      <h2
+        class="mb-2 font-[family-name:var(--font-display)] text-[length:var(--type-lg)] font-bold"
+      >
+        Automated Bias Detection is Active
+      </h2>
+      <p class="mb-4 max-w-xl text-[length:var(--type-sm)] leading-[var(--leading-relaxed)] text-white/90">
+        Our models are currently flagging a 1.4% deviation in scoring consistency across
+        non-technical roles. Review the latest calibration report to ensure fairness.
+      </p>
+      <div class="flex flex-wrap gap-3 [&_app-button]:max-md:w-full [&_.admin-btn]:max-md:w-full [&_.admin-btn]:max-md:justify-center">
+        <app-button variant="white">Detailed Report</app-button>
+        <app-button variant="white-outline">Calibrate Models</app-button>
+      </div>
+      <app-icon
+        class="pointer-events-none absolute right-4 -bottom-2 opacity-10 max-md:hidden"
+        [icon]="icons.gear"
+        [size]="120"
+        color="#ffffff"
+      />
+    </article>
+
+    <article
+      class="flex flex-col gap-3 rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-5 shadow-[var(--card-shadow)]"
+    >
+      <span class="inline-flex size-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+        <app-icon [icon]="icons.sparkles" [size]="20" />
+      </span>
+      <h3 class="m-0 font-[family-name:var(--font-display)] text-[length:var(--type-base)] font-bold">
+        Suggested Action
+      </h3>
+      <p class="m-0 text-[length:var(--type-sm)] leading-[var(--leading-relaxed)] text-[var(--text-subtle)]">
+        Review interview #INT-9405 for Marcus Chen. Score dropped 15% below domain average.
+      </p>
+      <app-button variant="soft" [fullWidth]="true">Start Review</app-button>
+    </article>
+  </div>
+</section>

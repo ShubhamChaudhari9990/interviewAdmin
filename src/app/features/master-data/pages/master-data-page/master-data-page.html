@@ -1,0 +1,369 @@
+<section class="mx-auto flex w-full max-w-[var(--max-page-width)] flex-col gap-[var(--content-gap)]">
+  <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">Admin &gt; Master Data</p>
+
+  <div
+    class="flex flex-wrap items-start justify-between gap-4 max-md:flex-col max-md:items-stretch"
+  >
+    <div>
+      <h1 class="page-title">
+        Interview Domains
+        <span
+          class="ml-2 text-[length:var(--type-lg)] font-medium text-[var(--text-faint)] max-sm:mt-1 max-sm:ml-0 max-sm:block max-sm:text-[length:var(--type-base)]"
+        >
+          {{ domains().length }}
+        </span>
+      </h1>
+      <p class="page-subtitle mt-2 max-w-xl">
+        Manage the options shown in the user-facing
+        <strong class="font-semibold text-[var(--text-heading)]">Type of Interview</strong>
+        dropdown. New domains appear for candidates immediately.
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 max-md:w-full [&_app-button]:max-md:flex-1 [&_.admin-btn]:max-md:w-full [&_.admin-btn]:max-md:justify-center">
+      <app-button
+        variant="primary"
+        [icon]="icons.add"
+        iconColor="#ffffff"
+        (click)="openCreate()"
+      >
+        Add Domain
+      </app-button>
+    </div>
+  </div>
+
+  <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.85fr)]">
+    <div class="flex min-w-0 flex-col gap-[var(--content-gap)]">
+      <div class="grid gap-4 md:grid-cols-3">
+        <article
+          class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-5 shadow-[var(--card-shadow)]"
+        >
+          <div class="mb-4 flex items-start justify-between">
+            <span
+              class="inline-flex size-10 items-center justify-center rounded-xl bg-slate-100 text-[var(--color-primary)]"
+            >
+              <app-icon [icon]="icons.listChecks" [size]="18" />
+            </span>
+          </div>
+          <strong class="stat-value">{{ domains().length }}</strong>
+          <p class="stat-label">Total domains</p>
+        </article>
+        <article
+          class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-5 shadow-[var(--card-shadow)]"
+        >
+          <div class="mb-4 flex items-start justify-between">
+            <span
+              class="inline-flex size-10 items-center justify-center rounded-xl bg-slate-100 text-[var(--color-primary)]"
+            >
+              <app-icon [icon]="icons.checkCircle" [size]="18" />
+            </span>
+          </div>
+          <strong class="stat-value">{{ activeCount() }}</strong>
+          <p class="stat-label">Active in dropdown</p>
+        </article>
+        <article
+          class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-5 shadow-[var(--card-shadow)]"
+        >
+          <div class="mb-4 flex items-start justify-between">
+            <span
+              class="inline-flex size-10 items-center justify-center rounded-xl bg-slate-100 text-[var(--color-primary)]"
+            >
+              <app-icon [icon]="icons.fileText" [size]="18" />
+            </span>
+          </div>
+          <strong class="stat-value">{{ filteredDomains().length }}</strong>
+          <p class="stat-label">Showing now</p>
+        </article>
+      </div>
+
+      <article
+        class="overflow-hidden rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] shadow-[var(--card-shadow)]"
+      >
+        <div class="flex flex-wrap items-center gap-3 border-b border-[var(--card-border)] px-4 py-4 md:px-5">
+          <div class="min-w-48 flex-1 basis-72 max-md:basis-full">
+            <input
+              class="admin-search-input box-border h-10 w-full rounded-xl border border-[var(--card-border)] bg-[var(--color-surface)] pr-3.5 pl-9 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] placeholder:text-[var(--text-faint)]"
+              type="search"
+              placeholder="Search domains..."
+              [value]="searchQuery()"
+              (input)="onSearchInput($event)"
+            />
+          </div>
+        </div>
+
+        <div class="admin-table-scroll w-full overflow-x-auto [-webkit-overflow-scrolling:touch]">
+          <p-table [value]="filteredDomains()" [tableStyle]="{ 'min-width': '48rem' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="tbl-head">Domain</th>
+                <th class="tbl-head">Status</th>
+                <th class="tbl-head">Order</th>
+                <th class="tbl-head">Usage</th>
+                <th class="tbl-head">Updated</th>
+                <th class="tbl-head">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-domain>
+              <tr>
+                <td>
+                  <div class="flex items-start gap-3">
+                    <span
+                      class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[var(--text-subtle)]"
+                    >
+                      <app-icon [icon]="icons.fileText" [size]="16" />
+                    </span>
+                    <div>
+                      <div class="subsection-title">{{ domain.name }}</div>
+                      <div class="meta-text">{{ domain.description }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="inline-flex cursor-pointer items-center rounded-full border-0 px-2.5 py-0.5 font-[inherit] text-[length:var(--type-xs)] font-semibold"
+                    [class]="statusClass(domain.status)"
+                    (click)="toggleStatus(domain)"
+                    [attr.aria-label]="'Toggle status for ' + domain.name"
+                  >
+                    {{ domain.status }}
+                  </button>
+                </td>
+                <td class="tbl-cell">{{ domain.sortOrder }}</td>
+                <td class="tbl-cell">{{ domain.usageCount }} interviews</td>
+                <td class="tbl-cell">{{ domain.updatedAt }}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.edit"
+                      ariaLabel="Edit domain"
+                      (click)="openEdit(domain)"
+                    />
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.trash"
+                      ariaLabel="Delete domain"
+                      (click)="openDelete(domain)"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td
+                  colspan="6"
+                  class="!px-4 !py-8 text-center text-[length:var(--type-sm)] text-[var(--text-muted)]"
+                >
+                  No interview domains match your search. Add a new domain to get started.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </article>
+    </div>
+
+    <aside
+      class="sticky top-[calc(var(--header-height)+1rem)] z-[2] self-start rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-5 shadow-[var(--card-shadow)] max-lg:static"
+      [class.[&_.preview-header]:mb-0]="!previewOpen()"
+    >
+      <div class="preview-header mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p
+            class="mb-1 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+          >
+            User frontend preview
+          </p>
+          <h3 class="subsection-title">Type of Interview</h3>
+        </div>
+        <app-button
+          variant="icon"
+          [icon]="previewOpen() ? icons.chevronUp : icons.chevronDown"
+          ariaLabel="Toggle preview"
+          (click)="previewOpen.set(!previewOpen())"
+        />
+      </div>
+
+      @if (previewOpen()) {
+        <div
+          class="flex items-center gap-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--color-surface)] px-3.5 py-3 text-[length:var(--type-sm)] font-semibold text-indigo-500 shadow-sm"
+          aria-hidden="true"
+        >
+          <span
+            class="inline-flex size-7 items-center justify-center rounded-md bg-slate-100 text-[var(--text-faint)]"
+          >
+            <app-icon [icon]="icons.fileText" [size]="16" />
+          </span>
+          <span class="min-w-0 flex-1">
+            {{ filteredDomains()[0]?.name || 'Select Interview Type' }}
+          </span>
+          <app-icon [icon]="icons.chevronUp" [size]="16" />
+        </div>
+
+        <ul
+          class="mt-2.5 list-none rounded-xl border border-[var(--card-border)] bg-[var(--color-surface)] p-1.5 shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+        >
+          <li class="px-3 py-2.5 text-[length:var(--type-sm)] font-medium text-indigo-400">
+            Select Interview Type
+          </li>
+          @for (domain of filteredDomains(); track domain.id) {
+            @if (domain.status === 'Active') {
+              <li
+                class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-[length:var(--type-sm)] text-[var(--text-body)]"
+                [class.bg-indigo-50]="$first"
+                [class.font-semibold]="$first"
+                [class.text-[var(--text-heading)]]="$first"
+              >
+                <span>{{ domain.name }}</span>
+                @if ($first) {
+                  <app-icon [icon]="icons.check" [size]="15" />
+                }
+              </li>
+            }
+          }
+        </ul>
+
+        <p class="meta-text mt-3.5 leading-[var(--leading-relaxed)]">
+          Only
+          <strong class="font-semibold text-[var(--text-heading)]">Active</strong>
+          domains appear in this dropdown for candidates.
+        </p>
+      }
+    </aside>
+  </div>
+</section>
+
+<app-modal
+  [open]="formModalOpen()"
+  [title]="formModalTitle()"
+  [subtitle]="formModalSubtitle()"
+  size="md"
+  (closed)="closeModal()"
+>
+  <form id="domainForm" class="p-0" (ngSubmit)="saveDomain()">
+    <div class="grid grid-cols-1 gap-x-4 gap-y-5 md:grid-cols-2">
+      <label class="flex min-w-0 flex-col gap-2">
+        <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+          Domain name <span class="text-[var(--danger)]">*</span>
+        </span>
+        <input
+          class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+          type="text"
+          [ngModel]="form().name"
+          (ngModelChange)="updateFormField('name', $event)"
+          name="domainName"
+          placeholder="e.g. Frontend, Product Management"
+          autocomplete="off"
+          maxlength="60"
+        />
+      </label>
+
+      <fieldset class="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+        <legend class="p-0 text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+          Status
+        </legend>
+        <div
+          class="flex min-h-10 flex-wrap items-center gap-x-5 gap-y-3"
+          role="radiogroup"
+          aria-label="Domain status"
+        >
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 text-[length:var(--type-sm)] font-medium text-[var(--text-body)] select-none"
+          >
+            <input
+              class="m-0 size-4 cursor-pointer appearance-none rounded-full border-2 border-slate-300 bg-[var(--color-surface)] transition checked:border-[var(--color-primary)] checked:bg-[var(--color-primary)] checked:shadow-[inset_0_0_0_3px_white] hover:border-[color-mix(in_srgb,var(--color-primary)_55%,#cbd5e1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
+              type="radio"
+              name="domainStatus"
+              value="Active"
+              [ngModel]="form().status"
+              (ngModelChange)="updateFormField('status', $event)"
+            />
+            <span>Active</span>
+          </label>
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 text-[length:var(--type-sm)] font-medium text-[var(--text-body)] select-none"
+          >
+            <input
+              class="m-0 size-4 cursor-pointer appearance-none rounded-full border-2 border-slate-300 bg-[var(--color-surface)] transition checked:border-[var(--color-primary)] checked:bg-[var(--color-primary)] checked:shadow-[inset_0_0_0_3px_white] hover:border-[color-mix(in_srgb,var(--color-primary)_55%,#cbd5e1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
+              type="radio"
+              name="domainStatus"
+              value="Inactive"
+              [ngModel]="form().status"
+              (ngModelChange)="updateFormField('status', $event)"
+            />
+            <span>Inactive</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <label class="col-span-full flex min-w-0 flex-col gap-2">
+        <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+          Description
+        </span>
+        <textarea
+          class="box-border min-h-20 w-full resize-y rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+          [ngModel]="form().description"
+          (ngModelChange)="updateFormField('description', $event)"
+          name="domainDescription"
+          placeholder="Short note for admins (optional)"
+          rows="3"
+          maxlength="200"
+        ></textarea>
+      </label>
+    </div>
+
+    @if (formError()) {
+      <p class="mt-3.5 text-[length:var(--type-sm)] font-medium text-[var(--danger)]" role="alert">
+        {{ formError() }}
+      </p>
+    }
+  </form>
+
+  <div modalFooter class="flex w-full flex-wrap items-center justify-end gap-3">
+    <app-button variant="outline" type="button" (click)="closeModal()">Cancel</app-button>
+    <app-button
+      variant="primary"
+      type="submit"
+      form="domainForm"
+      iconColor="#ffffff"
+      [icon]="icons.check"
+    >
+      {{ formSubmitLabel() }}
+    </app-button>
+  </div>
+</app-modal>
+
+<app-modal
+  [open]="deleteModalOpen()"
+  title="Delete Interview Domain"
+  [subtitle]="deleteModalSubtitle()"
+  size="sm"
+  (closed)="closeModal()"
+>
+  <div class="flex flex-col gap-4 py-0.5">
+    <span
+      class="inline-flex size-11 items-center justify-center rounded-xl bg-[var(--danger-bg)] text-[var(--danger)]"
+    >
+      <app-icon [icon]="icons.trash" [size]="22" />
+    </span>
+    <p class="body-text">
+      Candidates will no longer be able to select
+      <strong class="font-semibold text-[var(--text-heading)]">{{ deletingDomain()?.name }}</strong>
+      when starting an interview. This action cannot be undone.
+    </p>
+  </div>
+
+  <div modalFooter class="flex w-full flex-wrap items-center justify-end gap-3">
+    <app-button variant="outline" type="button" (click)="closeModal()">Cancel</app-button>
+    <app-button
+      variant="danger"
+      type="button"
+      iconColor="#ffffff"
+      [icon]="icons.trash"
+      (click)="confirmDelete()"
+    >
+      Delete Domain
+    </app-button>
+  </div>
+</app-modal>

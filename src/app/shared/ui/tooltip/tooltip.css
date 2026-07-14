@@ -1,0 +1,26 @@
+/* PrimeNG tooltip skin — deep selectors require a small stylesheet. */
+.app-tooltip.p-tooltip .p-tooltip-text {
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: var(--type-xs);
+  font-weight: 500;
+  line-height: 1.25;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+}
+
+.app-tooltip.p-tooltip-top .p-tooltip-arrow {
+  border-top-color: var(--p-tooltip-background, #0f172a);
+}
+
+.app-tooltip.p-tooltip-bottom .p-tooltip-arrow {
+  border-bottom-color: var(--p-tooltip-background, #0f172a);
+}
+
+.app-tooltip.p-tooltip-left .p-tooltip-arrow {
+  border-left-color: var(--p-tooltip-background, #0f172a);
+}
+
+.app-tooltip.p-tooltip-right .p-tooltip-arrow {
+  border-right-color: var(--p-tooltip-background, #0f172a);
+}
