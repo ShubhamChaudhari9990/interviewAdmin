@@ -1,9 +1,31 @@
-<aside class="admin-sidebar" [class.admin-sidebar--collapsed]="collapsed">
-  <div class="admin-sidebar__brand">
+<aside
+  class="admin-sidebar fixed top-0 left-0 z-30 flex h-screen flex-col overflow-hidden border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] transition-[width] duration-[var(--transition-default)]"
+  [class.admin-sidebar--collapsed]="collapsed"
+  [style.width]="collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)'"
+  [class.[&_.sidebar-brand]:flex-col]="collapsed"
+  [class.[&_.sidebar-brand]:items-center]="collapsed"
+  [class.[&_.sidebar-brand]:justify-center]="collapsed"
+  [class.[&_.sidebar-brand]:px-2]="collapsed"
+  [class.[&_.sidebar-brand]:pt-4]="collapsed"
+  [class.[&_.sidebar-brand]:pb-3]="collapsed"
+  [class.[&_.sidebar-nav]:px-2]="collapsed"
+  [class.[&_.sidebar-link]:justify-center]="collapsed"
+  [class.[&_.sidebar-link]:p-[0.7rem]]="collapsed"
+  [class.[&_.sidebar-footer]:px-2]="collapsed"
+>
+  <div class="sidebar-brand flex shrink-0 items-start justify-between gap-2 px-4 pt-6 pb-4">
     @if (!collapsed) {
-      <div class="admin-sidebar__brand-text">
-        <h1 class="admin-sidebar__logo">{{ productName }}</h1>
-        <p class="admin-sidebar__tagline">Enterprise Admin</p>
+      <div class="min-w-0">
+        <h1
+          class="m-0 font-[family-name:var(--font-display)] text-[length:var(--type-lg)] font-bold tracking-tight text-white whitespace-nowrap"
+        >
+          {{ productName }}
+        </h1>
+        <p
+          class="mt-1 mb-0 text-[length:var(--type-2xs)] font-bold tracking-[0.12em] text-[var(--sidebar-text-muted)] uppercase whitespace-nowrap"
+        >
+          Enterprise Admin
+        </p>
       </div>
     }
 
@@ -13,7 +35,7 @@
     >
       <button
         type="button"
-        class="admin-sidebar__toggle"
+        class="admin-sidebar__toggle inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--sidebar-border)] bg-[var(--sidebar-hover)] text-[var(--sidebar-text)] transition hover:bg-white/10 hover:text-slate-200"
         [attr.aria-label]="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
         [attr.aria-expanded]="!collapsed"
         (click)="toggleCollapse.emit()"
@@ -23,13 +45,16 @@
     </app-tooltip>
   </div>
 
-  <nav class="admin-sidebar__nav" aria-label="Main navigation">
+  <nav
+    class="sidebar-nav flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-2"
+    aria-label="Main navigation"
+  >
     @for (item of mainNav; track item.route) {
       <app-tooltip [text]="item.label" position="right" [disabled]="!collapsed" [inline]="false">
         <a
-          class="admin-sidebar__link"
+          class="sidebar-link mb-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3.5 py-[0.7rem] font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] font-medium text-[var(--sidebar-text)] no-underline transition hover:bg-[var(--sidebar-hover)] hover:text-slate-200"
           [routerLink]="item.route"
-          routerLinkActive="admin-sidebar__link--active"
+          routerLinkActive="!bg-[var(--color-primary)] !text-[var(--color-primary-foreground)]"
           [attr.aria-label]="collapsed ? item.label : null"
         >
           <app-icon [icon]="item.icon" [size]="18" />
@@ -41,12 +66,12 @@
     }
   </nav>
 
-  <div class="admin-sidebar__footer">
+  <div class="sidebar-footer shrink-0 border-t border-[var(--sidebar-border)] p-3">
     @for (item of footerNav; track item.route) {
       <app-tooltip [text]="item.label" position="right" [disabled]="!collapsed" [inline]="false">
         <a
-          class="admin-sidebar__link"
-          [class.admin-sidebar__link--danger]="item.danger"
+          class="sidebar-link mb-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3.5 py-[0.7rem] font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] font-medium text-[var(--sidebar-text)] no-underline transition hover:bg-[var(--sidebar-hover)] hover:text-slate-200"
+          [class.!text-red-400]="item.danger"
           [routerLink]="item.route"
           [attr.aria-label]="collapsed ? item.label : null"
         >

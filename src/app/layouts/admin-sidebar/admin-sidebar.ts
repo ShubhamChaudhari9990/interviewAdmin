@@ -11,7 +11,6 @@ import {
   selector: 'app-admin-sidebar',
   imports: [RouterLink, RouterLinkActive, AppIcon, AppTooltip],
   templateUrl: './admin-sidebar.html',
-  styleUrl: './admin-sidebar.css',
 })
 export class AdminSidebar {
   readonly icons = AppIcons;

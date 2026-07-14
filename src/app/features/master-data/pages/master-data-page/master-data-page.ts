@@ -27,7 +27,6 @@ const EMPTY_FORM: DomainFormState = {
   selector: 'app-master-data-page',
   imports: [FormsModule, TableModule, AppIcon, AppButton, AppModal],
   templateUrl: './master-data-page.html',
-  styleUrl: './master-data-page.css',
 })
 export class MasterDataPage {
   readonly icons = AppIcons;
@@ -212,7 +211,9 @@ export class MasterDataPage {
   }
 
   statusClass(status: InterviewDomainStatus): string {
-    return status === 'Active' ? 'admin-badge--active' : 'admin-badge--inactive';
+    return status === 'Active'
+      ? 'bg-[var(--success-bg)] text-[var(--success)]'
+      : 'bg-[var(--danger-bg)] text-[var(--danger)]';
   }
 
   onSearchInput(event: Event): void {

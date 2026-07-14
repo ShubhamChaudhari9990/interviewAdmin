@@ -1,7 +1,13 @@
-<footer class="admin-pagination">
-  <p class="admin-pagination__summary">{{ summary }}</p>
+<footer
+  class="flex flex-col items-stretch justify-between gap-4 border-t border-[var(--card-border)] p-4 sm:flex-row sm:items-center md:px-5"
+>
+  <p class="m-0 text-center text-[length:var(--type-xs)] text-[var(--text-subtle)] sm:text-left">
+    {{ summary }}
+  </p>
 
-  <div class="admin-pagination__controls">
+  <div
+    class="flex flex-wrap justify-center gap-2 sm:justify-end [&>app-button:not(:first-child):not(:last-child)]:max-sm:hidden"
+  >
     @if (navMode === 'icon') {
       <app-button
         variant="outline"

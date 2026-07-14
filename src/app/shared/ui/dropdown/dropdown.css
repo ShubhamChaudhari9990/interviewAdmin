@@ -1,12 +1,4 @@
-.app-dropdown {
-  display: block;
-  width: var(--dropdown-width, 9.5rem);
-}
-
-.app-dropdown--full {
-  width: 100%;
-}
-
+/* PrimeNG Select skin — deep component parts need CSS hooks. */
 .app-dropdown__select.p-select {
   width: 100%;
   min-height: 2.5rem;
@@ -14,7 +6,9 @@
   border-radius: 0.75rem;
   background: var(--color-surface);
   box-shadow: none;
-  transition: border-color var(--transition-default), outline-color var(--transition-default);
+  transition:
+    border-color var(--transition-default),
+    outline-color var(--transition-default);
 }
 
 .app-dropdown__select.p-select:not(.p-disabled):hover {
@@ -74,7 +68,9 @@
   font-family: var(--font-sans);
   font-size: var(--type-sm);
   color: var(--text-body);
-  transition: background-color var(--transition-default), color var(--transition-default);
+  transition:
+    background-color var(--transition-default),
+    color var(--transition-default);
 }
 
 .app-dropdown__panel .p-select-option:not(.p-disabled).p-focus {
@@ -90,11 +86,4 @@
 
 .app-dropdown__panel .p-select-option.p-select-option-selected.p-focus {
   background: rgba(53, 37, 205, 0.12);
-}
-
-@media (max-width: 768px) {
-  .app-dropdown {
-    width: 100%;
-    --dropdown-width: 100%;
-  }
 }

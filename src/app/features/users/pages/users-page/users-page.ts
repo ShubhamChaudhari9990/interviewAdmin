@@ -33,14 +33,16 @@ export class UsersPage {
 
   planClass(plan: AdminUser['plan']): string {
     return {
-      Enterprise: 'admin-badge--enterprise',
-      Pro: 'admin-badge--pro',
-      Free: 'admin-badge--free',
+      Enterprise: 'bg-violet-100 text-violet-700',
+      Pro: 'bg-blue-100 text-blue-700',
+      Free: 'bg-slate-100 text-slate-500',
     }[plan];
   }
 
   statusClass(status: AdminUser['status']): string {
-    return status === 'Active' ? 'admin-badge--active' : 'admin-badge--inactive';
+    return status === 'Active'
+      ? 'bg-[var(--success-bg)] text-[var(--success)]'
+      : 'bg-[var(--danger-bg)] text-[var(--danger)]';
   }
 
   interviewProgress(user: AdminUser): number {

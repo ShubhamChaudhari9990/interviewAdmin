@@ -1,13 +1,4 @@
-.app-tooltip-host {
-  display: inline-flex;
-  max-width: 100%;
-}
-
-.app-tooltip-host--block {
-  display: flex;
-  width: 100%;
-}
-
+/* PrimeNG tooltip skin — deep selectors require a small stylesheet. */
 .app-tooltip.p-tooltip .p-tooltip-text {
   padding: 0.4rem 0.65rem;
   border-radius: 0.5rem;

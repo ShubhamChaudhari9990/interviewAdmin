@@ -8,7 +8,6 @@ export type PaginationNavMode = 'text' | 'icon';
   selector: 'app-pagination',
   imports: [AppButton],
   templateUrl: './pagination.html',
-  styleUrl: './pagination.css',
 })
 export class AppPagination {
   readonly icons = AppIcons;

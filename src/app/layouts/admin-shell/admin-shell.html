@@ -1,12 +1,12 @@
 <div
-  class="admin-shell dashboard-ui"
+  class="admin-shell dashboard-ui min-h-screen bg-[var(--color-bg)]"
   [class.admin-shell--sidebar-collapsed]="sidebarCollapsed()"
   [class.admin-shell--mobile-nav-open]="mobileNavOpen()"
 >
   @if (mobileNavOpen()) {
     <button
       type="button"
-      class="admin-shell__backdrop"
+      class="admin-shell__backdrop fixed inset-0 z-[25] m-0 cursor-pointer border-0 bg-slate-900/45 p-0"
       aria-label="Close navigation menu"
       (click)="closeMobileNav()"
     ></button>
@@ -17,7 +17,9 @@
     (toggleCollapse)="toggleSidebar()"
   />
 
-  <div class="admin-main">
+  <div
+    class="admin-main flex min-h-screen flex-col ml-[var(--sidebar-width)] transition-[margin-left] duration-[var(--transition-default)] max-md:!ml-0 max-md:w-full"
+  >
     <app-admin-topbar
       [searchPlaceholder]="topbar().searchPlaceholder"
       [userName]="topbar().userName"
@@ -25,7 +27,7 @@
       [userAvatar]="topbar().userAvatar"
       (menuToggle)="toggleMobileNav()"
     />
-    <main class="admin-content">
+    <main class="min-h-0 flex-1 p-[var(--content-padding)]">
       <router-outlet />
     </main>
   </div>

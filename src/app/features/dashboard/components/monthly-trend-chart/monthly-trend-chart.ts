@@ -9,7 +9,7 @@ import * as echarts from 'echarts';
 
 @Component({
   selector: 'app-monthly-trend-chart',
-  template: `<div #chartHost class="admin-chart"></div>`,
+  template: `<div #chartHost class="h-[clamp(220px,40vw,280px)] w-full"></div>`,
 })
 export class MonthlyTrendChart implements AfterViewInit, OnDestroy {
   private chart?: echarts.ECharts;

@@ -16,7 +16,6 @@ type InterviewTab = 'all' | 'completed' | 'in-progress';
   selector: 'app-interviews-page',
   imports: [DecimalPipe, TableModule, AppIcon, AppButton, AppPagination],
   templateUrl: './interviews-page.html',
-  styleUrl: './interviews-page.css',
 })
 export class InterviewsPage {
   readonly icons = AppIcons;
@@ -59,17 +58,17 @@ export class InterviewsPage {
 
   scoreClass(level: Interview['scoreLevel']): string {
     return {
-      high: 'admin-badge--score-high',
-      medium: 'admin-badge--score-medium',
-      low: 'admin-badge--score-low',
-      na: 'admin-badge--score-na',
+      high: 'bg-[var(--success-bg)] text-[var(--success)]',
+      medium: 'bg-[var(--warning-bg)] text-[var(--warning)]',
+      low: 'bg-[var(--danger-bg)] text-[var(--danger)]',
+      na: 'bg-slate-100 text-slate-500',
     }[level];
   }
 
   statusClass(status: Interview['status']): string {
     return status === 'Completed'
-      ? 'admin-badge--status-completed admin-badge--dot'
-      : 'admin-badge--status-progress admin-badge--dot';
+      ? 'bg-[var(--success-bg)] text-[var(--success)] before:mr-1.5 before:inline-block before:size-1.5 before:rounded-full before:bg-current before:content-[\'\']'
+      : 'bg-[var(--info-bg)] text-[var(--info)] before:mr-1.5 before:inline-block before:size-1.5 before:rounded-full before:bg-current before:content-[\'\']';
   }
 
   scoreLabel(interview: Interview): string {
@@ -77,6 +76,13 @@ export class InterviewsPage {
   }
 
   statIconTone(tone: string): string {
-    return `interviews-stat-card__icon--${tone}`;
+    return (
+      {
+        purple: 'bg-violet-100 text-violet-700',
+        rose: 'bg-rose-100 text-rose-600',
+        blue: 'bg-blue-100 text-blue-600',
+        amber: 'bg-orange-100 text-amber-600',
+      }[tone] ?? 'bg-slate-100 text-slate-600'
+    );
   }
 }
