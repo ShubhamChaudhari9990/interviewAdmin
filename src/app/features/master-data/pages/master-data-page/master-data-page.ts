@@ -8,6 +8,9 @@ import {
   InterviewDomainStatus,
 } from '../../../../core/models/interview-domain.model';
 import { MOCK_INTERVIEW_DOMAINS } from '../../../../shared/data/interview-domains-mock.data';
+import { CareerPathSection } from '../career-path-section/career-path-section';
+
+type MasterDataSection = 'interview-types' | 'career-path';
 
 type DomainModal = 'closed' | 'create' | 'edit' | 'delete';
 
@@ -25,11 +28,13 @@ const EMPTY_FORM: DomainFormState = {
 
 @Component({
   selector: 'app-master-data-page',
-  imports: [FormsModule, TableModule, AppIcon, AppButton, AppModal],
+  imports: [FormsModule, TableModule, AppIcon, AppButton, AppModal, CareerPathSection],
   templateUrl: './master-data-page.html',
 })
 export class MasterDataPage {
   readonly icons = AppIcons;
+
+  readonly activeSection = signal<MasterDataSection>('interview-types');
 
   readonly domains = signal<InterviewDomain[]>([...MOCK_INTERVIEW_DOMAINS]);
   readonly searchQuery = signal('');
@@ -219,5 +224,9 @@ export class MasterDataPage {
   onSearchInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchQuery.set(target.value);
+  }
+
+  setSection(section: MasterDataSection): void {
+    this.activeSection.set(section);
   }
 }
