@@ -10,6 +10,18 @@
   background-position: 0.75rem center;
 }
 
+.admin-table-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+@media (max-width: 768px) {
+  .admin-table-scroll {
+    margin-inline: -0.25rem;
+    padding-inline: 0.25rem;
+  }
+}
+
 @media (min-width: 769px) {
   .admin-shell--sidebar-collapsed .admin-sidebar {
     width: var(--sidebar-width-collapsed) !important;

@@ -1,0 +1,5 @@
+@if (state().visible) {
+  <div class="app-loader-overlay" role="status" aria-live="polite" [attr.aria-label]="state().message">
+    <app-loader [label]="state().message" size="md" [showLabel]="false" />
+  </div>
+}

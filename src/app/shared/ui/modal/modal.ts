@@ -37,11 +37,15 @@ export class AppModal implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['open']) {
       this.syncBodyScroll(this.open);
+      if (!this.open) {
+        this.hideDetachedOverlays();
+      }
     }
   }
 
   ngOnDestroy(): void {
     this.syncBodyScroll(false);
+    this.hideDetachedOverlays();
   }
 
   close(): void {
@@ -49,6 +53,8 @@ export class AppModal implements OnChanges, OnDestroy {
       return;
     }
 
+    // Hide body-appended overlays (e.g. p-select) before the modal content is destroyed.
+    this.hideDetachedOverlays();
     this.openChange.emit(false);
     this.closed.emit();
   }
@@ -72,5 +78,15 @@ export class AppModal implements OnChanges, OnDestroy {
     }
 
     document.body.style.overflow = locked ? 'hidden' : '';
+  }
+
+  private hideDetachedOverlays(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document
+      .querySelectorAll('.p-select-overlay, .p-datepicker-panel, .p-connected-overlay, .p-overlay')
+      .forEach((el) => el.remove());
   }
 }

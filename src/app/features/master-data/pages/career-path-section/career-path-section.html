@@ -1,0 +1,444 @@
+<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <div class="min-w-0">
+    <h1 class="page-title">Master Data</h1>
+    <p class="page-subtitle mt-1 max-w-xl pb-4">
+      Manage career selection options and domain-specific interview types candidates choose when
+      configuring an interview.
+    </p>
+  </div>
+  <app-button
+    variant="primary"
+    [icon]="icons.add"
+    iconColor="#ffffff"
+    [disabled]="!canCreateItem()"
+    (click)="openCreate()"
+    class="w-full shrink-0 sm:w-auto [&_.admin-btn]:w-full [&_.admin-btn]:justify-center sm:[&_.admin-btn]:w-auto"
+  >
+    {{ levelMeta().addLabel }}
+  </app-button>
+</div>
+
+@if (loadError()) {
+  <div
+    class="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-bg)] px-4 py-3 text-[length:var(--type-sm)] text-[var(--danger)]"
+  >
+    {{ loadError() }}
+    <button
+      type="button"
+      class="ml-2 font-semibold underline"
+      (click)="loadMasterData()"
+    >
+      Retry
+    </button>
+  </div>
+}
+
+@if (isLoading()) {
+  <div class="flex min-h-[12rem] items-center justify-center py-10">
+    <app-loader label="Loading master data..." size="md" [showLabel]="false" />
+  </div>
+} @else {
+<div
+  class="grid items-start gap-4"
+>
+  <div class="flex min-w-0 flex-col gap-4">
+    <div
+      class="overflow-x-auto rounded-xl border border-[var(--card-border)] bg-slate-50 p-1 [-webkit-overflow-scrolling:touch]"
+      role="tablist"
+      aria-label="Master data levels"
+    >
+      <div class="inline-flex min-w-full gap-1">
+        @for (level of levels; track level) {
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="activeLevel() === level"
+            class="inline-flex min-h-9 shrink-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[length:var(--type-sm)] font-semibold whitespace-nowrap transition sm:gap-2 sm:px-3"
+            [class.bg-[var(--color-surface)]]="activeLevel() === level"
+            [class.text-[var(--color-primary)]]="activeLevel() === level"
+            [class.shadow-sm]="activeLevel() === level"
+            [class.text-[var(--text-muted)]]="activeLevel() !== level"
+            (click)="setLevel(level)"
+          >
+            <app-icon [icon]="levelConfig[level].icon" [size]="15" />
+            <span class="hidden sm:inline">{{ levelConfig[level].label }}</span>
+            <span class="sm:hidden">{{ levelConfig[level].label.split(' ')[0] }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <article
+      class="overflow-hidden rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] shadow-[var(--card-shadow)]"
+    >
+      <div
+        class="flex flex-col gap-3 border-b border-[var(--card-border)] px-4 py-3.5 sm:flex-row sm:flex-wrap sm:items-center md:px-5 [&_app-dropdown]:w-full [&_app-dropdown]:sm:w-auto [&_app-dropdown]:sm:min-w-[11rem] [&_.app-dropdown]:w-full [&_.app-dropdown]:sm:w-auto [&_.app-dropdown]:sm:[--dropdown-width:11rem]"
+      >
+        <div class="w-full min-w-0 sm:min-w-48 sm:flex-1 sm:basis-56">
+          <input
+            class="admin-search-input box-border h-10 w-full rounded-xl border border-[var(--card-border)] bg-[var(--color-surface)] pr-3.5 pl-9 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] placeholder:text-[var(--text-faint)]"
+            type="search"
+            [placeholder]="'Search ' + levelMeta().label.toLowerCase() + 's...'"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+          />
+        </div>
+
+        @if (hasParentColumn() && parentOptions().length > 0) {
+          <app-dropdown
+            [options]="parentFilterOptions()"
+            [value]="parentFilterId()"
+            (valueChange)="parentFilterId.set($event)"
+            [ariaLabel]="'Filter by ' + levelMeta().parentLabel"
+          />
+        }
+
+        <span
+          class="inline-flex w-fit items-center gap-1.5 self-start rounded-full bg-slate-100 px-2.5 py-1 text-[length:var(--type-xs)] font-medium text-[var(--text-muted)] sm:ml-auto"
+        >
+          <strong class="font-semibold text-[var(--text-heading)]">{{ activeCount() }}</strong>
+          active
+          <span class="text-[var(--text-faint)]">/ {{ totalCount() }}</span>
+        </span>
+      </div>
+
+      <div class="hidden md:block">
+        <div class="admin-table-scroll w-full overflow-x-auto [-webkit-overflow-scrolling:touch]">
+          <p-table [value]="filteredItems()" [tableStyle]="{ 'min-width': '44rem' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="tbl-head">{{ levelMeta().label }}</th>
+                @if (hasParentColumn()) {
+                  <th class="tbl-head">{{ levelMeta().parentLabel }}</th>
+                }
+                <th class="tbl-head">Status</th>
+                <th class="tbl-head hidden lg:table-cell">Order</th>
+                <th class="tbl-head hidden xl:table-cell">Usage</th>
+                <th class="tbl-head hidden lg:table-cell">Updated</th>
+                <th class="tbl-head">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td>
+                  <div class="flex items-start gap-3">
+                    <span
+                      class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[var(--text-subtle)]"
+                    >
+                      <app-icon [icon]="levelMeta().icon" [size]="16" />
+                    </span>
+                    <div class="min-w-0">
+                      <div class="subsection-title">{{ displayItemName(item) }}</div>
+                      <div class="meta-text line-clamp-2">{{ item.description }}</div>
+                    </div>
+                  </div>
+                </td>
+                @if (hasParentColumn()) {
+                  <td class="tbl-cell">{{ getParentName(item) }}</td>
+                }
+                <td>
+                  <button
+                    type="button"
+                    class="inline-flex cursor-pointer items-center rounded-full border-0 px-2.5 py-0.5 font-[inherit] text-[length:var(--type-xs)] font-semibold whitespace-nowrap"
+                    [class]="statusClass(item.status)"
+                    (click)="toggleStatus(item)"
+                    [attr.aria-label]="'Toggle status for ' + displayItemName(item)"
+                  >
+                    {{ item.status }}
+                  </button>
+                </td>
+                <td class="tbl-cell hidden lg:table-cell">{{ item.sortOrder }}</td>
+                <td class="tbl-cell hidden xl:table-cell">{{ item.usageCount }} interviews</td>
+                <td class="tbl-cell hidden lg:table-cell whitespace-nowrap">{{ item.updatedAt }}</td>
+                <td>
+                  <div class="flex gap-1 sm:gap-2">
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.edit"
+                      ariaLabel="Edit item"
+                      (click)="openEdit(item)"
+                    />
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.trash"
+                      ariaLabel="Delete item"
+                      (click)="openDelete(item)"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td
+                  [attr.colspan]="hasParentColumn() ? 7 : 6"
+                  class="!px-4 !py-8 text-center text-[length:var(--type-sm)] text-[var(--text-muted)]"
+                >
+                  No {{ levelMeta().label | lowercase }}s match your filters. Add a new entry to get
+                  started.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3 p-4 md:hidden">
+        @for (item of filteredItems(); track item.id) {
+          <article
+            class="rounded-xl border border-[var(--card-border)] bg-[var(--color-surface)] p-4 shadow-sm"
+          >
+            <div class="flex items-start gap-3">
+              <span
+                class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[var(--text-subtle)]"
+              >
+                <app-icon [icon]="levelMeta().icon" [size]="16" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="subsection-title m-0">{{ displayItemName(item) }}</h3>
+                  <button
+                    type="button"
+                    class="inline-flex shrink-0 cursor-pointer items-center rounded-full border-0 px-2 py-0.5 font-[inherit] text-[length:var(--type-2xs)] font-semibold"
+                    [class]="statusClass(item.status)"
+                    (click)="toggleStatus(item)"
+                  >
+                    {{ item.status }}
+                  </button>
+                </div>
+                <p class="meta-text mt-1 line-clamp-2">{{ item.description }}</p>
+                @if (hasParentColumn()) {
+                  <p class="meta-text mt-2">
+                    <span class="font-semibold text-[var(--text-heading)]">
+                      {{ levelMeta().parentLabel }}:
+                    </span>
+                    {{ getParentName(item) }}
+                  </p>
+                }
+                <div class="mt-3 flex items-center justify-between gap-3">
+                  <span class="meta-text">{{ item.updatedAt }} · {{ item.usageCount }} uses</span>
+                  <div class="flex gap-1">
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.edit"
+                      ariaLabel="Edit item"
+                      (click)="openEdit(item)"
+                    />
+                    <app-button
+                      variant="icon"
+                      [icon]="icons.trash"
+                      ariaLabel="Delete item"
+                      (click)="openDelete(item)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        } @empty {
+          <p class="py-6 text-center text-[length:var(--type-sm)] text-[var(--text-muted)]">
+            No {{ levelMeta().label | lowercase }}s match your filters. Add a new entry to get
+            started.
+          </p>
+        }
+      </div>
+    </article>
+  </div>
+
+  <!--
+  <aside
+    class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-4 shadow-[var(--card-shadow)] xl:sticky xl:top-[calc(var(--header-height)+1rem)] xl:z-[2] xl:self-start"
+  >
+    <button
+      type="button"
+      class="flex w-full items-center justify-between gap-3 text-left"
+      (click)="previewOpen.set(!previewOpen())"
+    >
+      <span
+        class="text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+      >
+        User preview
+      </span>
+      <app-icon [icon]="previewOpen() ? icons.chevronUp : icons.chevronDown" [size]="16" />
+    </button>
+
+    @if (previewOpen()) {
+      <div class="mt-3 flex flex-col gap-2.5 sm:grid sm:grid-cols-2 sm:gap-3 xl:flex xl:flex-col">
+        @for (preview of [
+          { label: 'Interview Type', icon: icons.fileText, value: previewInterviewTypes()[0] ? displayItemName(previewInterviewTypes()[0]) : 'Select Interview Type' },
+          { label: 'Domain', icon: icons.database, value: previewDomains()[0]?.name || 'Select Domain' },
+          { label: 'Category', icon: icons.wrench, value: previewCategories()[0]?.name || 'Select Category' },
+          { label: 'Specialization', icon: icons.eye, value: previewSpecializations()[0]?.name || 'Select Specialization' },
+          { label: 'Target Role', icon: icons.shield, value: previewTargetRoles()[0]?.name || 'Select Target Role' }
+        ]; track preview.label) {
+          <div>
+            <p class="mb-1 text-[length:var(--type-2xs)] font-semibold text-[var(--text-muted)]">
+              {{ preview.label }}
+            </p>
+            <div
+              class="flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-slate-50 px-3 py-2 text-[length:var(--type-sm)] font-medium text-[var(--text-heading)]"
+              aria-hidden="true"
+            >
+              <app-icon [icon]="preview.icon" [size]="15" class="shrink-0 text-[var(--text-faint)]" />
+              <span class="min-w-0 flex-1 truncate">{{ preview.value }}</span>
+              <app-icon [icon]="icons.chevronDown" [size]="14" class="shrink-0 text-[var(--text-faint)]" />
+            </div>
+          </div>
+        }
+
+        @if (selectedPath()) {
+          <div
+            class="rounded-lg bg-indigo-50 px-3 py-2 text-[length:var(--type-2xs)] leading-relaxed text-indigo-700 sm:col-span-2 xl:col-span-1"
+          >
+            {{ selectedPath() }}
+          </div>
+        }
+      </div>
+    }
+  </aside>
+  -->
+</div>
+}
+
+<app-modal
+  [open]="formModalOpen()"
+  [title]="formModalTitle()"
+  [subtitle]="formModalSubtitle()"
+  size="md"
+  (closed)="closeModal()"
+>
+  <form id="careerPathForm" class="p-0" (ngSubmit)="saveItem()">
+    <div class="grid grid-cols-1 gap-x-4 gap-y-5 md:grid-cols-2">
+      @if (levelMeta().parentLevel) {
+        <div class="col-span-full flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            {{ levelMeta().parentLabel }}
+            <span class="text-[var(--danger)]">*</span>
+          </span>
+          <app-dropdown
+            [fullWidth]="true"
+            [options]="parentOptions()"
+            [value]="form().parentId"
+            (valueChange)="updateFormField('parentId', $event)"
+            [ariaLabel]="'Select ' + levelMeta().parentLabel"
+          />
+        </div>
+      }
+
+      <label class="flex min-w-0 flex-col gap-2" [class.col-span-full]="!levelMeta().parentLevel">
+        <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+          {{ levelMeta().label }} name <span class="text-[var(--danger)]">*</span>
+        </span>
+        <input
+          class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+          type="text"
+          [ngModel]="form().name"
+          (ngModelChange)="updateFormField('name', $event)"
+          name="careerName"
+          [placeholder]="activeLevel() === 'interviewType' ? 'e.g. technical, coding' : 'e.g. ' + levelMeta().label"
+          autocomplete="off"
+          maxlength="60"
+        />
+      </label>
+
+      <fieldset class="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+        <legend class="p-0 text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+          Status
+        </legend>
+        <div
+          class="flex min-h-10 flex-wrap items-center gap-x-5 gap-y-3"
+          role="radiogroup"
+          aria-label="Item status"
+        >
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 text-[length:var(--type-sm)] font-medium text-[var(--text-body)] select-none"
+          >
+            <input
+              class="m-0 size-4 cursor-pointer appearance-none rounded-full border-2 border-slate-300 bg-[var(--color-surface)] transition checked:border-[var(--color-primary)] checked:bg-[var(--color-primary)] checked:shadow-[inset_0_0_0_3px_white] hover:border-[color-mix(in_srgb,var(--color-primary)_55%,#cbd5e1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
+              type="radio"
+              name="careerStatus"
+              value="Active"
+              [ngModel]="form().status"
+              (ngModelChange)="updateFormField('status', $event)"
+            />
+            <span>Active</span>
+          </label>
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 text-[length:var(--type-sm)] font-medium text-[var(--text-body)] select-none"
+          >
+            <input
+              class="m-0 size-4 cursor-pointer appearance-none rounded-full border-2 border-slate-300 bg-[var(--color-surface)] transition checked:border-[var(--color-primary)] checked:bg-[var(--color-primary)] checked:shadow-[inset_0_0_0_3px_white] hover:border-[color-mix(in_srgb,var(--color-primary)_55%,#cbd5e1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
+              type="radio"
+              name="careerStatus"
+              value="Inactive"
+              [ngModel]="form().status"
+              (ngModelChange)="updateFormField('status', $event)"
+            />
+            <span>Inactive</span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    @if (formError()) {
+      <p class="mt-3.5 text-[length:var(--type-sm)] font-medium text-[var(--danger)]" role="alert">
+        {{ formError() }}
+      </p>
+    }
+  </form>
+
+  <div
+    modalFooter
+    class="flex w-full flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&_app-button]:w-full [&_.admin-btn]:w-full sm:[&_app-button]:w-auto sm:[&_.admin-btn]:w-auto"
+  >
+    <app-button variant="outline" type="button" (click)="closeModal()">Cancel</app-button>
+    <app-button
+      variant="primary"
+      type="submit"
+      form="careerPathForm"
+      iconColor="#ffffff"
+      [icon]="icons.check"
+      [disabled]="isSaving()"
+    >
+      {{ isSaving() ? 'Saving...' : formSubmitLabel() }}
+    </app-button>
+  </div>
+</app-modal>
+
+<app-modal
+  [open]="deleteModalOpen()"
+  [title]="'Delete ' + levelMeta().label"
+  [subtitle]="deleteModalSubtitle()"
+  size="sm"
+  (closed)="closeModal()"
+>
+  <div class="flex flex-col gap-4 py-0.5">
+    <span
+      class="inline-flex size-11 items-center justify-center rounded-xl bg-[var(--danger-bg)] text-[var(--danger)]"
+    >
+      <app-icon [icon]="icons.trash" [size]="22" />
+    </span>
+    <p class="body-text">
+      Candidates will no longer be able to select
+      <strong class="font-semibold text-[var(--text-heading)]">{{ deletingItem()?.name }}</strong>
+      when configuring their career path. This action cannot be undone.
+    </p>
+  </div>
+
+  <div
+    modalFooter
+    class="flex w-full flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&_app-button]:w-full [&_.admin-btn]:w-full sm:[&_app-button]:w-auto sm:[&_.admin-btn]:w-auto"
+  >
+    <app-button variant="outline" type="button" (click)="closeModal()">Cancel</app-button>
+    <app-button
+      variant="danger"
+      type="button"
+      iconColor="#ffffff"
+      [icon]="icons.trash"
+      [disabled]="isSaving()"
+      (click)="confirmDelete()"
+    >
+      {{ isSaving() ? 'Deleting...' : 'Delete ' + levelMeta().label }}
+    </app-button>
+  </div>
+</app-modal>
