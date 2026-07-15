@@ -1,0 +1,40 @@
+.app-loader__ring {
+  display: inline-block;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 12%, var(--card-border));
+  border-top-color: var(--color-primary);
+  animation: app-loader-spin 0.7s linear infinite;
+}
+
+.app-loader--sm .app-loader__ring {
+  width: 1rem;
+  height: 1rem;
+}
+
+.app-loader--md .app-loader__ring {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.app-loader--lg .app-loader__ring {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.app-loader--sm .app-loader__label {
+  font-size: var(--type-2xs);
+}
+
+.app-loader--md .app-loader__label {
+  font-size: var(--type-xs);
+}
+
+.app-loader--lg .app-loader__label {
+  font-size: var(--type-sm);
+}
+
+@keyframes app-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

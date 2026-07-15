@@ -4,6 +4,7 @@ import { filter, map, startWith, tap } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AdminSidebar } from '../admin-sidebar/admin-sidebar';
 import { AdminTopbar } from './components/admin-topbar/admin-topbar';
+import { AppToastContainer, AppLoaderOverlay } from '../../shared/ui';
 
 export interface TopbarConfig {
   searchPlaceholder: string;
@@ -58,7 +59,7 @@ function resolveTopbar(url: string): TopbarConfig {
 
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterOutlet, AdminSidebar, AdminTopbar],
+  imports: [RouterOutlet, AdminSidebar, AdminTopbar, AppToastContainer, AppLoaderOverlay],
   templateUrl: './admin-shell.html',
 })
 export class AdminShell {

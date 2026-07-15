@@ -1,15 +1,16 @@
 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
   <div class="min-w-0">
-    <h1 class="page-title">Career Selection</h1>
-    <p class="page-subtitle mt-1 max-w-xl">
-      Manage the cascading Domain → Category → Specialization → Target Role options candidates
-      choose from.
+    <h1 class="page-title">Master Data</h1>
+    <p class="page-subtitle mt-1 max-w-xl pb-4">
+      Manage career selection options and domain-specific interview types candidates choose when
+      configuring an interview.
     </p>
   </div>
   <app-button
     variant="primary"
     [icon]="icons.add"
     iconColor="#ffffff"
+    [disabled]="!canCreateItem()"
     (click)="openCreate()"
     class="w-full shrink-0 sm:w-auto [&_.admin-btn]:w-full [&_.admin-btn]:justify-center sm:[&_.admin-btn]:w-auto"
   >
@@ -17,14 +18,34 @@
   </app-button>
 </div>
 
+@if (loadError()) {
+  <div
+    class="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-bg)] px-4 py-3 text-[length:var(--type-sm)] text-[var(--danger)]"
+  >
+    {{ loadError() }}
+    <button
+      type="button"
+      class="ml-2 font-semibold underline"
+      (click)="loadMasterData()"
+    >
+      Retry
+    </button>
+  </div>
+}
+
+@if (isLoading()) {
+  <div class="flex min-h-[12rem] items-center justify-center py-10">
+    <app-loader label="Loading master data..." size="md" [showLabel]="false" />
+  </div>
+} @else {
 <div
-  class="grid items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(240px,0.75fr)]"
+  class="grid items-start gap-4"
 >
   <div class="flex min-w-0 flex-col gap-4">
     <div
       class="overflow-x-auto rounded-xl border border-[var(--card-border)] bg-slate-50 p-1 [-webkit-overflow-scrolling:touch]"
       role="tablist"
-      aria-label="Career path levels"
+      aria-label="Master data levels"
     >
       <div class="inline-flex min-w-full gap-1">
         @for (level of levels; track level) {
@@ -107,7 +128,7 @@
                       <app-icon [icon]="levelMeta().icon" [size]="16" />
                     </span>
                     <div class="min-w-0">
-                      <div class="subsection-title">{{ item.name }}</div>
+                      <div class="subsection-title">{{ displayItemName(item) }}</div>
                       <div class="meta-text line-clamp-2">{{ item.description }}</div>
                     </div>
                   </div>
@@ -121,7 +142,7 @@
                     class="inline-flex cursor-pointer items-center rounded-full border-0 px-2.5 py-0.5 font-[inherit] text-[length:var(--type-xs)] font-semibold whitespace-nowrap"
                     [class]="statusClass(item.status)"
                     (click)="toggleStatus(item)"
-                    [attr.aria-label]="'Toggle status for ' + item.name"
+                    [attr.aria-label]="'Toggle status for ' + displayItemName(item)"
                   >
                     {{ item.status }}
                   </button>
@@ -175,7 +196,7 @@
               </span>
               <div class="min-w-0 flex-1">
                 <div class="flex items-start justify-between gap-2">
-                  <h3 class="subsection-title m-0">{{ item.name }}</h3>
+                  <h3 class="subsection-title m-0">{{ displayItemName(item) }}</h3>
                   <button
                     type="button"
                     class="inline-flex shrink-0 cursor-pointer items-center rounded-full border-0 px-2 py-0.5 font-[inherit] text-[length:var(--type-2xs)] font-semibold"
@@ -224,6 +245,7 @@
     </article>
   </div>
 
+  <!--
   <aside
     class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] p-4 shadow-[var(--card-shadow)] xl:sticky xl:top-[calc(var(--header-height)+1rem)] xl:z-[2] xl:self-start"
   >
@@ -243,6 +265,7 @@
     @if (previewOpen()) {
       <div class="mt-3 flex flex-col gap-2.5 sm:grid sm:grid-cols-2 sm:gap-3 xl:flex xl:flex-col">
         @for (preview of [
+          { label: 'Interview Type', icon: icons.fileText, value: previewInterviewTypes()[0] ? displayItemName(previewInterviewTypes()[0]) : 'Select Interview Type' },
           { label: 'Domain', icon: icons.database, value: previewDomains()[0]?.name || 'Select Domain' },
           { label: 'Category', icon: icons.wrench, value: previewCategories()[0]?.name || 'Select Category' },
           { label: 'Specialization', icon: icons.eye, value: previewSpecializations()[0]?.name || 'Select Specialization' },
@@ -273,7 +296,9 @@
       </div>
     }
   </aside>
+  -->
 </div>
+}
 
 <app-modal
   [open]="formModalOpen()"
@@ -310,7 +335,7 @@
           [ngModel]="form().name"
           (ngModelChange)="updateFormField('name', $event)"
           name="careerName"
-          [placeholder]="'e.g. ' + levelMeta().label"
+          [placeholder]="activeLevel() === 'interviewType' ? 'e.g. technical, coding' : 'e.g. ' + levelMeta().label"
           autocomplete="off"
           maxlength="60"
         />
@@ -353,21 +378,6 @@
           </label>
         </div>
       </fieldset>
-
-      <label class="col-span-full flex min-w-0 flex-col gap-2">
-        <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
-          Description
-        </span>
-        <textarea
-          class="box-border min-h-20 w-full resize-y rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
-          [ngModel]="form().description"
-          (ngModelChange)="updateFormField('description', $event)"
-          name="careerDescription"
-          placeholder="Short note for admins (optional)"
-          rows="3"
-          maxlength="200"
-        ></textarea>
-      </label>
     </div>
 
     @if (formError()) {
@@ -388,8 +398,9 @@
       form="careerPathForm"
       iconColor="#ffffff"
       [icon]="icons.check"
+      [disabled]="isSaving()"
     >
-      {{ formSubmitLabel() }}
+      {{ isSaving() ? 'Saving...' : formSubmitLabel() }}
     </app-button>
   </div>
 </app-modal>
@@ -424,9 +435,10 @@
       type="button"
       iconColor="#ffffff"
       [icon]="icons.trash"
+      [disabled]="isSaving()"
       (click)="confirmDelete()"
     >
-      Delete {{ levelMeta().label }}
+      {{ isSaving() ? 'Deleting...' : 'Delete ' + levelMeta().label }}
     </app-button>
   </div>
 </app-modal>

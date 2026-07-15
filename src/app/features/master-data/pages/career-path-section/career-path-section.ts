@@ -1,8 +1,8 @@
 import { LowerCasePipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
-import { AppButton, AppDropdown, AppIcon, AppModal } from '../../../../shared/ui';
+import { AppButton, AppDropdown, AppIcon, AppLoader, AppModal } from '../../../../shared/ui';
 import { AppIcons } from '../../../../shared/ui/icon/icon';
 import {
   CareerCategory,
@@ -12,7 +12,12 @@ import {
   CareerTargetRole,
   MasterDataStatus,
 } from '../../../../core/models/career-path.model';
-import { MOCK_CAREER_PATH } from '../../../../shared/data/career-path-mock.data';
+import { InterviewType } from '../../../../core/models/interview-type.model';
+import { InterviewDomainFirestoreService } from '../../../../core/services/interview-domain-firestore.service';
+import { LoaderService } from '../../../../core/services/loader.service';
+import { ToastService } from '../../../../core/services/toast.service';
+
+type MasterDataLevel = CareerPathLevel | 'interviewType';
 
 type ItemModal = 'closed' | 'create' | 'edit' | 'delete';
 
@@ -34,14 +39,20 @@ interface LevelConfig {
   label: string;
   singular: string;
   icon: (typeof AppIcons)[keyof typeof AppIcons];
-  parentLevel: CareerPathLevel | null;
+  parentLevel: MasterDataLevel | null;
   parentLabel: string | null;
   addLabel: string;
 }
 
-const LEVEL_ORDER: CareerPathLevel[] = ['domain', 'category', 'specialization', 'targetRole'];
+const LEVEL_ORDER: MasterDataLevel[] = [
+  'interviewType',
+  'domain',
+  'category',
+  'specialization',
+  'targetRole',
+];
 
-const LEVEL_CONFIG: Record<CareerPathLevel, LevelConfig> = {
+const LEVEL_CONFIG: Record<MasterDataLevel, LevelConfig> = {
   domain: {
     label: 'Domain',
     singular: 'domain',
@@ -74,31 +85,63 @@ const LEVEL_CONFIG: Record<CareerPathLevel, LevelConfig> = {
     parentLabel: 'Specialization',
     addLabel: 'Add Target Role',
   },
+  interviewType: {
+    label: 'Interview Type',
+    singular: 'interview type',
+    icon: AppIcons.fileText,
+    parentLevel: 'domain',
+    parentLabel: 'Domain',
+    addLabel: 'Add Interview Type',
+  },
 };
 
 type CareerPathItem = CareerDomain | CareerCategory | CareerSpecialization | CareerTargetRole;
+type MasterDataItem = CareerPathItem | InterviewType;
+
+function formatInterviewTypeLabel(type: string): string {
+  const trimmed = type.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (/[\s-]/.test(trimmed)) {
+    return trimmed;
+  }
+
+  return trimmed
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 @Component({
   selector: 'app-career-path-section',
-  imports: [LowerCasePipe, FormsModule, TableModule, AppIcon, AppButton, AppDropdown, AppModal],
+  imports: [LowerCasePipe, FormsModule, TableModule, AppIcon, AppButton, AppDropdown, AppLoader, AppModal],
   templateUrl: './career-path-section.html',
 })
-export class CareerPathSection {
+export class CareerPathSection implements OnInit {
+  private readonly interviewDomainFirestore = inject(InterviewDomainFirestoreService);
+  private readonly loaderService = inject(LoaderService);
+  private readonly toastService = inject(ToastService);
+
   readonly icons = AppIcons;
   readonly levels = LEVEL_ORDER;
   readonly levelConfig = LEVEL_CONFIG;
 
-  readonly domains = signal<CareerDomain[]>([...MOCK_CAREER_PATH.domains]);
-  readonly categories = signal<CareerCategory[]>([...MOCK_CAREER_PATH.categories]);
-  readonly specializations = signal<CareerSpecialization[]>([...MOCK_CAREER_PATH.specializations]);
-  readonly targetRoles = signal<CareerTargetRole[]>([...MOCK_CAREER_PATH.targetRoles]);
+  readonly domains = signal<CareerDomain[]>([]);
+  readonly categories = signal<CareerCategory[]>([]);
+  readonly specializations = signal<CareerSpecialization[]>([]);
+  readonly targetRoles = signal<CareerTargetRole[]>([]);
+  readonly interviewTypes = signal<InterviewType[]>([]);
+  readonly isLoading = signal(true);
+  readonly isSaving = signal(false);
+  readonly loadError = signal('');
 
-  readonly activeLevel = signal<CareerPathLevel>('domain');
+  readonly activeLevel = signal<MasterDataLevel>('interviewType');
   readonly parentFilterId = signal('');
   readonly searchQuery = signal('');
   readonly activeModal = signal<ItemModal>('closed');
   readonly editingId = signal<string | null>(null);
-  readonly deletingItem = signal<CareerPathItem | null>(null);
+  readonly deletingItem = signal<MasterDataItem | null>(null);
   readonly form = signal<ItemFormState>({ ...EMPTY_FORM });
   readonly formError = signal('');
   readonly previewOpen = signal(true);
@@ -168,6 +211,9 @@ export class CareerPathSection {
   readonly formModalSubtitle = computed(() => {
     const meta = this.levelMeta();
     const action = this.activeModal() === 'edit' ? 'Update how this' : 'Create a new';
+    if (this.activeLevel() === 'interviewType') {
+      return `${action} ${meta.singular} appears in the Type of Interview dropdown.`;
+    }
     return `${action} ${meta.singular} appears in the Career Selection dropdown.`;
   });
 
@@ -222,6 +268,17 @@ export class CareerPathSection {
       .sort((a, b) => a.sortOrder - b.sortOrder);
   });
 
+  readonly previewInterviewTypes = computed(() => {
+    const domain = this.previewDomains()[0];
+    if (!domain) {
+      return [];
+    }
+
+    return [...this.interviewTypes()]
+      .filter((item) => item.status === 'Active' && item.domainId === domain.id)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  });
+
   readonly selectedPath = computed(() => {
     const parts = [
       this.previewDomains()[0]?.name,
@@ -233,7 +290,36 @@ export class CareerPathSection {
     return parts.join(' > ');
   });
 
-  setLevel(level: CareerPathLevel): void {
+  ngOnInit(): void {
+    void this.loadMasterData();
+  }
+
+  async loadMasterData(): Promise<void> {
+    const isRetry = Boolean(this.loadError());
+    this.isLoading.set(true);
+    this.loadError.set('');
+
+    try {
+      const data = await this.interviewDomainFirestore.loadMasterData();
+      this.domains.set(data.careerPath.domains);
+      this.categories.set(data.careerPath.categories);
+      this.specializations.set(data.careerPath.specializations);
+      this.targetRoles.set(data.careerPath.targetRoles);
+      this.interviewTypes.set(data.interviewTypes);
+
+      if (isRetry) {
+        this.toastService.success('Data loaded', 'Master data was refreshed from the database.');
+      }
+    } catch (error) {
+      const message = this.getErrorMessage(error, 'Failed to load master data.');
+      this.loadError.set(message);
+      this.toastService.error('Load failed', message);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  setLevel(level: MasterDataLevel): void {
     this.activeLevel.set(level);
     this.parentFilterId.set('');
     this.searchQuery.set('');
@@ -259,7 +345,7 @@ export class CareerPathSection {
     this.activeModal.set('create');
   }
 
-  openEdit(item: CareerPathItem): void {
+  openEdit(item: MasterDataItem): void {
     this.deletingItem.set(null);
     this.editingId.set(item.id);
     this.form.set({
@@ -272,7 +358,7 @@ export class CareerPathSection {
     this.activeModal.set('edit');
   }
 
-  openDelete(item: CareerPathItem): void {
+  openDelete(item: MasterDataItem): void {
     this.editingId.set(null);
     this.form.set({ ...EMPTY_FORM });
     this.formError.set('');
@@ -293,7 +379,7 @@ export class CareerPathSection {
     this.formError.set('');
   }
 
-  saveItem(): void {
+  async saveItem(): Promise<void> {
     const level = this.activeLevel();
     const config = LEVEL_CONFIG[level];
     const draft = this.form();
@@ -321,32 +407,52 @@ export class CareerPathSection {
       return;
     }
 
-    if (this.activeModal() === 'edit' && this.editingId()) {
+    const isEdit = this.activeModal() === 'edit' && Boolean(this.editingId());
+    if (isEdit) {
       this.updateItem(level, this.editingId()!, name, draft);
     } else {
       this.createItem(level, name, draft);
     }
 
-    this.closeModal();
+    const saved = await this.persistMasterData(
+      isEdit
+        ? `${config.label} updated successfully.`
+        : `${config.label} created successfully.`,
+    );
+    if (saved) {
+      this.closeModal();
+    }
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const item = this.deletingItem();
     if (!item) {
       return;
     }
 
     const level = this.activeLevel();
+    const config = LEVEL_CONFIG[level];
+    const itemName = this.displayItemName(item);
     this.removeItem(level, item.id);
-    this.closeModal();
+
+    const saved = await this.persistMasterData(`${config.label} "${itemName}" deleted successfully.`);
+    if (saved) {
+      this.closeModal();
+    }
   }
 
-  toggleStatus(item: CareerPathItem): void {
+  async toggleStatus(item: MasterDataItem): Promise<void> {
     const level = this.activeLevel();
+    const config = LEVEL_CONFIG[level];
+    const nextStatus = item.status === 'Active' ? 'Inactive' : 'Active';
     this.patchItem(level, item.id, {
-      status: item.status === 'Active' ? 'Inactive' : 'Active',
+      status: nextStatus,
       updatedAt: 'Just now',
     });
+    await this.persistMasterData(
+      `${config.label} marked as ${nextStatus}.`,
+      `${this.displayItemName(item)} is now ${nextStatus.toLowerCase()}.`,
+    );
   }
 
   statusClass(status: MasterDataStatus): string {
@@ -355,7 +461,7 @@ export class CareerPathSection {
       : 'bg-[var(--danger-bg)] text-[var(--danger)]';
   }
 
-  getParentName(item: CareerPathItem): string {
+  getParentName(item: MasterDataItem): string {
     const level = this.activeLevel();
     const config = LEVEL_CONFIG[level];
     if (!config.parentLevel) {
@@ -371,7 +477,26 @@ export class CareerPathSection {
     return LEVEL_CONFIG[this.activeLevel()].parentLevel !== null;
   }
 
-  private getItemsForLevel(level: CareerPathLevel): CareerPathItem[] {
+  displayItemName(item: MasterDataItem): string {
+    if (this.activeLevel() === 'interviewType') {
+      return formatInterviewTypeLabel(item.name);
+    }
+    return item.name;
+  }
+
+  canCreateItem(): boolean {
+    if (this.isLoading() || this.isSaving()) {
+      return false;
+    }
+
+    if (this.activeLevel() === 'interviewType') {
+      return Boolean(this.parentFilterId() || this.parentOptions()[0]?.value);
+    }
+
+    return true;
+  }
+
+  private getItemsForLevel(level: MasterDataLevel): MasterDataItem[] {
     switch (level) {
       case 'domain':
         return this.domains();
@@ -381,16 +506,18 @@ export class CareerPathSection {
         return this.specializations();
       case 'targetRole':
         return this.targetRoles();
+      case 'interviewType':
+        return this.interviewTypes();
     }
   }
 
-  private getActiveParents(level: CareerPathLevel): CareerPathItem[] {
+  private getActiveParents(level: MasterDataLevel): MasterDataItem[] {
     return this.getItemsForLevel(level)
       .filter((item) => item.status === 'Active')
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
-  private getParentId(item: CareerPathItem): string {
+  private getParentId(item: MasterDataItem): string {
     if ('domainId' in item) {
       return item.domainId;
     }
@@ -403,7 +530,7 @@ export class CareerPathSection {
     return '';
   }
 
-  private createItem(level: CareerPathLevel, name: string, draft: ItemFormState): void {
+  private createItem(level: MasterDataLevel, name: string, draft: ItemFormState): void {
     const nextOrder =
       this.getItemsForLevel(level).reduce((max, item) => Math.max(max, item.sortOrder), 0) + 1;
 
@@ -433,11 +560,17 @@ export class CareerPathSection {
           { ...base, specializationId: draft.parentId },
         ]);
         break;
+      case 'interviewType':
+        this.interviewTypes.update((items) => [
+          ...items,
+          { ...base, domainId: draft.parentId },
+        ]);
+        break;
     }
   }
 
   private updateItem(
-    level: CareerPathLevel,
+    level: MasterDataLevel,
     id: string,
     name: string,
     draft: ItemFormState,
@@ -476,13 +609,20 @@ export class CareerPathSection {
           ),
         );
         break;
+      case 'interviewType':
+        this.interviewTypes.update((items) =>
+          items.map((item) =>
+            item.id === id ? { ...item, ...patch, domainId: draft.parentId } : item,
+          ),
+        );
+        break;
     }
   }
 
   private patchItem(
-    level: CareerPathLevel,
+    level: MasterDataLevel,
     id: string,
-    patch: Partial<CareerPathItem>,
+    patch: Partial<MasterDataItem>,
   ): void {
     switch (level) {
       case 'domain':
@@ -505,10 +645,56 @@ export class CareerPathSection {
           items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
         );
         break;
+      case 'interviewType':
+        this.interviewTypes.update((items) =>
+          items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+        );
+        break;
     }
   }
 
-  private removeItem(level: CareerPathLevel, id: string): void {
+  private async persistMasterData(
+    successTitle?: string,
+    successMessage?: string,
+  ): Promise<boolean> {
+    this.isSaving.set(true);
+    this.loaderService.show('Saving changes...');
+
+    try {
+      await this.interviewDomainFirestore.saveMasterData(
+        {
+          domains: this.domains(),
+          categories: this.categories(),
+          specializations: this.specializations(),
+          targetRoles: this.targetRoles(),
+        },
+        this.interviewTypes(),
+      );
+
+      this.toastService.success(
+        successTitle ?? 'Changes saved',
+        successMessage ?? 'Master data was updated in the database.',
+      );
+      return true;
+    } catch (error) {
+      const message = this.getErrorMessage(error, 'Failed to save master data.');
+      this.toastService.error('Save failed', message);
+      await this.loadMasterData();
+      return false;
+    } finally {
+      this.isSaving.set(false);
+      this.loaderService.hide();
+    }
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+    return fallback;
+  }
+
+  private removeItem(level: MasterDataLevel, id: string): void {
     switch (level) {
       case 'domain': {
         const categoryIds = this.categories()
@@ -526,6 +712,7 @@ export class CareerPathSection {
         this.targetRoles.update((items) =>
           items.filter((item) => !specializationIds.includes(item.specializationId)),
         );
+        this.interviewTypes.update((items) => items.filter((item) => item.domainId !== id));
         break;
       }
       case 'category': {
@@ -546,6 +733,9 @@ export class CareerPathSection {
         break;
       case 'targetRole':
         this.targetRoles.update((items) => items.filter((item) => item.id !== id));
+        break;
+      case 'interviewType':
+        this.interviewTypes.update((items) => items.filter((item) => item.id !== id));
         break;
     }
   }

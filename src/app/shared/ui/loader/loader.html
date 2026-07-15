@@ -1,0 +1,16 @@
+<div
+  class="app-loader inline-flex flex-col items-center justify-center gap-2"
+  [class.app-loader--sm]="size === 'sm'"
+  [class.app-loader--md]="size === 'md'"
+  [class.app-loader--lg]="size === 'lg'"
+  role="status"
+  aria-live="polite"
+  [attr.aria-label]="label"
+>
+  <span class="app-loader__ring" aria-hidden="true"></span>
+  @if (showLabel && label) {
+    <p class="app-loader__label m-0 text-center font-[family-name:var(--font-sans)] text-[var(--text-muted)]">
+      {{ label }}
+    </p>
+  }
+</div>

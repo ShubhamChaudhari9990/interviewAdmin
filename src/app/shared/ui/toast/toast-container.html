@@ -1,0 +1,38 @@
+<div
+  class="pointer-events-none fixed inset-x-0 top-[calc(var(--header-height)+0.75rem)] z-[1100] flex flex-col items-end gap-3 px-4 sm:px-6"
+  aria-live="polite"
+  aria-relevant="additions"
+>
+  @for (toast of toasts(); track toast.id) {
+    <article
+      class="app-toast pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border p-4 shadow-[0_16px_40px_rgba(15,23,42,0.12)]"
+      [class]="styleFor(toast).container"
+      role="status"
+    >
+      <span
+        class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/70"
+        [class]="styleFor(toast).iconClass"
+      >
+        <app-icon [icon]="styleFor(toast).icon" [size]="18" />
+      </span>
+
+      <div class="min-w-0 flex-1 pt-0.5">
+        <h3 class="m-0 text-[length:var(--type-sm)] font-semibold text-[var(--text-heading)]">
+          {{ toast.title }}
+        </h3>
+        @if (toast.message) {
+          <p class="mt-1 mb-0 text-[length:var(--type-xs)] leading-[var(--leading-relaxed)] text-[var(--text-body)]">
+            {{ toast.message }}
+          </p>
+        }
+      </div>
+
+      <app-button
+        variant="icon"
+        [icon]="icons.close"
+        ariaLabel="Dismiss notification"
+        (click)="dismiss(toast.id)"
+      />
+    </article>
+  }
+</div>
