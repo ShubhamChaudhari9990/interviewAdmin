@@ -18,16 +18,13 @@
   />
 
   <div
-    class="admin-main flex min-h-screen flex-col ml-[var(--sidebar-width)] transition-[margin-left] duration-[var(--transition-default)] max-md:!ml-0 max-md:w-full"
+    class="admin-main flex min-h-screen min-w-0 flex-col ml-[var(--sidebar-width)] transition-[margin-left] duration-[var(--transition-default)] max-lg:!ml-0 max-lg:w-full"
   >
     <app-admin-topbar
       [searchPlaceholder]="topbar().searchPlaceholder"
-      [userName]="topbar().userName"
-      [userRole]="topbar().userRole"
-      [userAvatar]="topbar().userAvatar"
       (menuToggle)="toggleMobileNav()"
     />
-    <main class="min-h-0 flex-1 p-[var(--content-padding)]">
+    <main class="min-h-0 min-w-0 flex-1 overflow-x-hidden p-[var(--content-padding)]">
       <router-outlet />
     </main>
   </div>

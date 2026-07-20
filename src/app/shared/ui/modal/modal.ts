@@ -12,7 +12,7 @@ import {
 import { AppButton } from '../button/button';
 import { AppIcons } from '../icon/icon';
 
-export type ModalSize = 'sm' | 'md' | 'lg';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 @Component({
   selector: 'app-modal',

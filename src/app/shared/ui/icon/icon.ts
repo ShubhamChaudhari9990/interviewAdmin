@@ -318,6 +318,7 @@ export const AppIcons = {
   masterData: APP_ICONS.database,
   aiManagement: APP_ICONS.bot,
   subscriptions: APP_ICONS.creditCard,
+  faq: CircleHelp,
   logs: APP_ICONS.scrollText,
   support: HelpCircle,
   signOut: APP_ICONS.logOut,

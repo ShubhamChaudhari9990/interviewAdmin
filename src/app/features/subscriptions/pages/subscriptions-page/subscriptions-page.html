@@ -1,0 +1,474 @@
+<section class="mx-auto flex w-full min-w-0 max-w-[var(--max-page-width)] flex-col gap-[var(--content-gap)]">
+  <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">Admin &gt; Subscriptions</p>
+
+  <div class="flex flex-wrap items-start justify-between gap-4 max-lg:flex-col max-lg:items-stretch">
+    <div class="min-w-0">
+      <h1 class="page-title">Subscriptions</h1>
+      <p class="page-subtitle mt-1 max-w-xl">
+        Review and update the three subscription plans shown to candidates. Changes sync directly to
+        Firestore.
+      </p>
+    </div>
+
+    <div
+      class="inline-flex w-full shrink-0 self-start rounded-xl border border-[var(--card-border)] bg-slate-50 p-1 max-lg:self-stretch lg:w-auto"
+      role="tablist"
+      aria-label="Billing cycle preview"
+    >
+      <button
+        type="button"
+        role="tab"
+        class="min-w-0 flex-1 rounded-lg px-3.5 py-2 text-[length:var(--type-sm)] font-semibold transition lg:flex-none"
+        [class.bg-[var(--color-surface)]]="billingCycle() === 'monthly'"
+        [class.text-[var(--color-primary)]]="billingCycle() === 'monthly'"
+        [class.shadow-sm]="billingCycle() === 'monthly'"
+        [class.text-[var(--text-muted)]]="billingCycle() !== 'monthly'"
+        [attr.aria-selected]="billingCycle() === 'monthly'"
+        (click)="setBillingCycle('monthly')"
+      >
+        Monthly
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="min-w-0 flex-1 rounded-lg px-3.5 py-2 text-[length:var(--type-sm)] font-semibold transition lg:flex-none"
+        [class.bg-[var(--color-surface)]]="billingCycle() === 'yearly'"
+        [class.text-[var(--color-primary)]]="billingCycle() === 'yearly'"
+        [class.shadow-sm]="billingCycle() === 'yearly'"
+        [class.text-[var(--text-muted)]]="billingCycle() !== 'yearly'"
+        [attr.aria-selected]="billingCycle() === 'yearly'"
+        (click)="setBillingCycle('yearly')"
+      >
+        Yearly
+      </button>
+    </div>
+  </div>
+
+  @if (loadError()) {
+    <div
+      class="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-bg)] px-4 py-3 text-[length:var(--type-sm)] text-[var(--danger)]"
+    >
+      {{ loadError() }}
+      <button type="button" class="ml-2 font-semibold underline" (click)="loadPlans()">
+        Retry
+      </button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="flex min-h-[16rem] items-center justify-center py-10">
+      <app-loader label="Loading plans..." size="md" [showLabel]="false" />
+    </div>
+  } @else {
+    <div class="flex flex-wrap items-center gap-2 text-[length:var(--type-xs)] text-[var(--text-muted)]">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 font-medium"
+      >
+        <strong class="font-semibold text-[var(--text-heading)]">{{ plans().length }}</strong>
+        plans
+      </span>
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-bg)] px-2.5 py-1 font-medium text-[var(--success)]"
+      >
+        <strong class="font-semibold">{{ activePlanCount() }}</strong>
+        active
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      @for (plan of plans(); track plan.id) {
+        <article
+          class="relative flex flex-col overflow-hidden rounded-[var(--shell-radius)] border bg-[var(--color-surface)] shadow-[var(--card-shadow)]"
+          [class.border-[var(--color-primary)]]="plan.isPopular"
+          [class.border-[var(--card-border)]]="!plan.isPopular"
+          [class.opacity-70]="!plan.isActive"
+        >
+          @if (plan.isPopular) {
+            <div
+              class="bg-[var(--color-primary)] px-4 py-1.5 text-center text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-white uppercase"
+            >
+              Most popular
+            </div>
+          }
+
+          <div class="flex flex-1 flex-col gap-5 p-5 md:p-6">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="flex min-w-0 items-start gap-3">
+                <span
+                  class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[var(--color-primary)]"
+                >
+                  <app-icon [icon]="planIcon(plan)" [size]="22" />
+                </span>
+                <div class="min-w-0">
+                  <h2 class="m-0 text-[length:var(--type-lg)] font-bold text-[var(--text-heading)]">
+                    {{ plan.name }}
+                  </h2>
+                  <p class="mt-1 text-[length:var(--type-xs)] text-[var(--text-muted)]">
+                    ID: {{ plan.id }}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                class="inline-flex shrink-0 rounded-full px-2.5 py-1 text-[length:var(--type-2xs)] font-semibold"
+                [class]="
+                  plan.isActive
+                    ? 'bg-[var(--success-bg)] text-[var(--success)]'
+                    : 'bg-[var(--danger-bg)] text-[var(--danger)]'
+                "
+              >
+                {{ plan.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+
+            <div>
+              <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+                <span class="text-[length:var(--type-stat)] font-bold text-[var(--text-heading)]">
+                  {{ formatPrice(displayedAmount(plan), plan.currency) }}
+                </span>
+                <span class="text-[length:var(--type-sm)] text-[var(--text-muted)]">
+                  {{ billingLabel(plan) }}
+                </span>
+              </div>
+              <p class="mt-2 text-[length:var(--type-sm)] leading-relaxed text-[var(--text-body)]">
+                {{ plan.description || 'No description set.' }}
+              </p>
+            </div>
+
+            <ul class="m-0 flex flex-1 list-none flex-col gap-2.5 p-0">
+              @for (row of featureRows(plan); track row.label) {
+                <li
+                  class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 border-b border-[var(--card-border)] pb-2.5 text-[length:var(--type-sm)] last:border-b-0 last:pb-0"
+                >
+                  <span class="min-w-0 text-[var(--text-muted)]">{{ row.label }}</span>
+                  <span
+                    class="min-w-0 text-right font-semibold break-words text-[var(--text-heading)]"
+                    [class.text-[var(--success)]]="row.included === true"
+                    [class.text-[var(--text-faint)]]="row.included === false"
+                  >
+                    {{ row.value }}
+                  </span>
+                </li>
+              }
+            </ul>
+
+            <div
+              class="rounded-xl border border-dashed border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 text-center text-[length:var(--type-sm)] font-semibold text-[var(--text-heading)]"
+            >
+              {{ plan.buttonText }}
+            </div>
+
+            <app-button
+              variant="outline"
+              [icon]="icons.edit"
+              class="w-full [&_.admin-btn]:w-full [&_.admin-btn]:justify-center"
+              (click)="openEdit(plan)"
+            >
+              Edit plan
+            </app-button>
+          </div>
+        </article>
+      } @empty {
+        <div
+          class="col-span-full rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] px-6 py-12 text-center shadow-[var(--card-shadow)]"
+        >
+          <p class="m-0 text-[length:var(--type-base)] font-semibold text-[var(--text-heading)]">
+            No plans found
+          </p>
+          <p class="mt-2 text-[length:var(--type-sm)] text-[var(--text-muted)]">
+            Expected documents in the Firestore <code>plans</code> collection.
+          </p>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<app-modal
+  [open]="editOpen()"
+  [title]="'Edit ' + editingPlanName()"
+  subtitle="Update pricing, limits, and feature flags for this plan."
+  size="xl"
+  (closed)="closeEdit()"
+>
+  <form id="planEditForm" class="flex flex-col gap-6" (ngSubmit)="savePlan()">
+    <section class="flex flex-col gap-4">
+      <h3
+        class="m-0 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+      >
+        Basics
+      </h3>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Plan name <span class="text-[var(--danger)]">*</span>
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="text"
+            name="planName"
+            [ngModel]="form().name"
+            (ngModelChange)="updateFormField('name', $event)"
+            maxlength="40"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Button text <span class="text-[var(--danger)]">*</span>
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="text"
+            name="buttonText"
+            [ngModel]="form().buttonText"
+            (ngModelChange)="updateFormField('buttonText', $event)"
+            maxlength="40"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="col-span-full flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Description
+          </span>
+          <textarea
+            class="box-border min-h-20 w-full resize-y rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            name="description"
+            rows="3"
+            [ngModel]="form().description"
+            (ngModelChange)="updateFormField('description', $event)"
+          ></textarea>
+        </label>
+
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Icon key
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="text"
+            name="icon"
+            [ngModel]="form().icon"
+            (ngModelChange)="updateFormField('icon', $event)"
+            placeholder="rocket, star, building-2"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Currency
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="text"
+            name="currency"
+            [ngModel]="form().currency"
+            (ngModelChange)="updateFormField('currency', $event)"
+            maxlength="3"
+            autocomplete="off"
+          />
+        </label>
+      </div>
+
+      <div class="flex flex-wrap gap-5">
+        <label
+          class="inline-flex cursor-pointer items-center gap-2 text-[length:var(--type-sm)] font-medium text-[var(--text-body)] select-none"
+        >
+          <input
+            class="m-0 size-4 cursor-pointer accent-[var(--color-primary)]"
+            type="checkbox"
+            name="isActive"
+            [ngModel]="form().isActive"
+            (ngModelChange)="updateFormField('isActive', $event)"
+          />
+          Active
+        </label>
+        <label
+          class="inline-flex cursor-pointer items-center gap-2 text-[length:var(--type-sm)] font-medium text-[var(--text-body)] select-none"
+        >
+          <input
+            class="m-0 size-4 cursor-pointer accent-[var(--color-primary)]"
+            type="checkbox"
+            name="isPopular"
+            [ngModel]="form().isPopular"
+            (ngModelChange)="updateFormField('isPopular', $event)"
+          />
+          Mark as popular
+        </label>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-4">
+      <h3
+        class="m-0 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+      >
+        Pricing (INR)
+      </h3>
+      <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">
+        Enter amounts in rupees. Values are stored in paise for Razorpay compatibility.
+      </p>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Monthly price (₹)
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="number"
+            name="monthlyAmount"
+            min="0"
+            step="0.01"
+            [ngModel]="form().monthlyAmountRupees"
+            (ngModelChange)="updateNumberField('monthlyAmountRupees', $event)"
+          />
+        </label>
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Yearly price (₹)
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="number"
+            name="yearlyAmount"
+            min="0"
+            step="0.01"
+            [ngModel]="form().yearlyAmountRupees"
+            (ngModelChange)="updateNumberField('yearlyAmountRupees', $event)"
+          />
+        </label>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-4">
+      <h3
+        class="m-0 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+      >
+        Limits
+      </h3>
+      <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">
+        Use <strong>-1</strong> for unlimited.
+      </p>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Interview credits
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="number"
+            name="interviewCredits"
+            [ngModel]="form().interviewCredits"
+            (ngModelChange)="updateNumberField('interviewCredits', $event)"
+          />
+        </label>
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Monthly interview limit
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="number"
+            name="monthlyInterviewLimit"
+            [ngModel]="form().monthlyInterviewLimit"
+            (ngModelChange)="updateNumberField('monthlyInterviewLimit', $event)"
+          />
+        </label>
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Monthly resume upload limit
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="number"
+            name="monthlyResumeUploadLimit"
+            [ngModel]="form().monthlyResumeUploadLimit"
+            (ngModelChange)="updateNumberField('monthlyResumeUploadLimit', $event)"
+          />
+        </label>
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            Resume analysis limit
+          </span>
+          <input
+            class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+            type="number"
+            name="monthlyResumeAnalysisLimit"
+            [ngModel]="form().monthlyResumeAnalysisLimit"
+            (ngModelChange)="updateNumberField('monthlyResumeAnalysisLimit', $event)"
+          />
+        </label>
+        <div class="flex min-w-0 flex-col gap-2 sm:col-span-2">
+          <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+            AI feedback level
+          </span>
+          <app-dropdown
+            [fullWidth]="true"
+            [options]="feedbackOptions"
+            [value]="form().aiFeedbackLevel"
+            (valueChange)="onFeedbackChange($event)"
+            ariaLabel="AI feedback level"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-4">
+      <h3
+        class="m-0 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+      >
+        Feature flags
+      </h3>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        @for (toggle of featureToggles; track toggle.key) {
+          <label
+            class="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-3 select-none"
+          >
+            <input
+              class="mt-0.5 size-4 shrink-0 cursor-pointer accent-[var(--color-primary)]"
+              type="checkbox"
+              [name]="toggle.key"
+              [ngModel]="form()[toggle.key]"
+              (ngModelChange)="updateFormField(toggle.key, $event)"
+            />
+            <span class="min-w-0">
+              <span class="block text-[length:var(--type-sm)] font-semibold text-[var(--text-heading)]">
+                {{ toggle.label }}
+              </span>
+              <span class="mt-0.5 block text-[length:var(--type-xs)] text-[var(--text-muted)]">
+                {{ toggle.hint }}
+              </span>
+            </span>
+          </label>
+        }
+      </div>
+    </section>
+
+    @if (formError()) {
+      <p class="m-0 text-[length:var(--type-sm)] font-medium text-[var(--danger)]" role="alert">
+        {{ formError() }}
+      </p>
+    }
+  </form>
+
+  <div
+    modalFooter
+    class="flex w-full flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&_app-button]:w-full [&_.admin-btn]:w-full sm:[&_app-button]:w-auto sm:[&_.admin-btn]:w-auto"
+  >
+    <app-button variant="outline" type="button" [disabled]="isSaving()" (click)="closeEdit()">
+      Cancel
+    </app-button>
+    <app-button
+      variant="primary"
+      type="submit"
+      form="planEditForm"
+      iconColor="#ffffff"
+      [icon]="icons.save"
+      [disabled]="isSaving()"
+    >
+      Save changes
+    </app-button>
+  </div>
+</app-modal>

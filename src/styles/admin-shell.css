@@ -15,20 +15,20 @@
   overscroll-behavior-x: contain;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-table-scroll {
     margin-inline: -0.25rem;
     padding-inline: 0.25rem;
   }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .admin-shell--sidebar-collapsed .admin-sidebar {
     width: var(--sidebar-width-collapsed) !important;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-shell--mobile-nav-open {
     overflow: hidden;
   }

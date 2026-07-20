@@ -8,50 +8,51 @@ import { AppToastContainer, AppLoaderOverlay } from '../../shared/ui';
 
 export interface TopbarConfig {
   searchPlaceholder: string;
-  userName: string;
-  userRole: string;
-  userAvatar: string;
 }
 
 const DEFAULT_TOPBAR: TopbarConfig = {
-  searchPlaceholder: 'Search analytics, users, or logs...',
-  userName: 'Alex Rivera',
-  userRole: 'Super Admin',
-  userAvatar: 'https://i.pravatar.cc/80?u=alex-admin',
+  searchPlaceholder: 'Search users, interviews, or plans...',
+};
+
+const SUBSCRIPTIONS_TOPBAR: TopbarConfig = {
+  searchPlaceholder: 'Search plans...',
+};
+
+const FAQ_TOPBAR: TopbarConfig = {
+  searchPlaceholder: 'Search FAQ...',
 };
 
 const USERS_TOPBAR: TopbarConfig = {
   searchPlaceholder: 'Global search...',
-  userName: 'Sarah Connor',
-  userRole: 'Super Admin',
-  userAvatar: 'https://i.pravatar.cc/80?u=sarah-admin',
 };
 
 const INTERVIEWS_TOPBAR: TopbarConfig = {
   searchPlaceholder: 'Search interviews...',
-  userName: 'Sarah Connor',
-  userRole: 'Super Admin',
-  userAvatar: 'https://i.pravatar.cc/80?u=sarah-admin',
 };
 
 const MASTER_DATA_TOPBAR: TopbarConfig = {
   searchPlaceholder: 'Search interview domains...',
-  userName: 'Sarah Connor',
-  userRole: 'Super Admin',
-  userAvatar: 'https://i.pravatar.cc/80?u=sarah-admin',
 };
 
 function resolveTopbar(url: string): TopbarConfig {
-  if (url.startsWith('/interviews')) {
+  if (url.startsWith('/admin/interviews')) {
     return INTERVIEWS_TOPBAR;
   }
 
-  if (url.startsWith('/master-data')) {
+  if (url.startsWith('/admin/master-data')) {
     return MASTER_DATA_TOPBAR;
   }
 
-  if (url.startsWith('/users')) {
+  if (url.startsWith('/admin/users')) {
     return USERS_TOPBAR;
+  }
+
+  if (url.startsWith('/admin/subscriptions')) {
+    return SUBSCRIPTIONS_TOPBAR;
+  }
+
+  if (url.startsWith('/admin/faq')) {
+    return FAQ_TOPBAR;
   }
 
   return DEFAULT_TOPBAR;
@@ -92,7 +93,7 @@ export class AdminShell {
 
   @HostListener('window:resize')
   onWindowResize(): void {
-    if (typeof window !== 'undefined' && window.innerWidth > 768) {
+    if (typeof window !== 'undefined' && window.innerWidth > 1024) {
       this.closeMobileNav();
     }
   }
