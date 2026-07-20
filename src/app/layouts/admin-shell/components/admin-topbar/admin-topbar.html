@@ -3,7 +3,7 @@
 >
   <button
     type="button"
-    class="admin-header__menu-btn inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--color-surface)] text-[var(--text-subtle)] max-md:inline-flex md:hidden"
+    class="admin-header__menu-btn inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--color-surface)] text-[var(--text-subtle)] max-lg:inline-flex lg:hidden"
     aria-label="Open navigation menu"
     (click)="menuToggle.emit()"
   >
@@ -20,32 +20,19 @@
   </div>
 
   <div class="ml-auto flex shrink-0 items-center gap-2 md:gap-3">
-    <button
-      type="button"
-      class="relative inline-flex size-9 cursor-pointer items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--color-surface)] text-[var(--text-subtle)] max-md:size-8 after:absolute after:top-[0.45rem] after:right-2 after:size-[0.45rem] after:rounded-full after:bg-red-500 after:content-['']"
-      aria-label="Notifications"
-    >
-      <app-icon [icon]="icons.bell" [size]="18" />
-    </button>
-    <button
-      type="button"
-      class="inline-flex size-9 cursor-pointer items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--color-surface)] text-[var(--text-subtle)] max-md:size-8"
-      aria-label="Toggle theme"
-    >
-      <app-icon [icon]="icons.sun" [size]="18" />
-    </button>
-
     <div class="flex items-center gap-3 pl-2">
       <div class="hidden text-right md:block">
         <p class="m-0 text-[length:var(--type-sm)] font-semibold text-[var(--text-heading)]">
-          {{ userName }}
+          {{ profile().name }}
         </p>
-        <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">{{ userRole }}</p>
+        @if (profile().role) {
+          <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">{{ profile().role }}</p>
+        }
       </div>
       <img
         class="size-10 rounded-full object-cover max-md:size-8"
-        [src]="userAvatar"
-        [alt]="userName"
+        [src]="profile().avatar"
+        [alt]="profile().name"
       />
     </div>
   </div>

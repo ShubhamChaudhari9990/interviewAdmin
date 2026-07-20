@@ -1,6 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AppIcon } from '../../../../shared/ui';
 import { AppIcons } from '../../../../shared/ui/icon/icon';
+import { AuthService } from '../../../../shared/service/auth.service';
 
 @Component({
   selector: 'app-admin-topbar',
@@ -8,12 +10,15 @@ import { AppIcons } from '../../../../shared/ui/icon/icon';
   templateUrl: './admin-topbar.html',
 })
 export class AdminTopbar {
+  private readonly authService = inject(AuthService);
+
   readonly icons = AppIcons;
 
   @Input() searchPlaceholder = 'Search analytics, users, or logs...';
-  @Input() userName = 'Alex Rivera';
-  @Input() userRole = 'Super Admin';
-  @Input() userAvatar = 'https://i.pravatar.cc/80?u=alex-admin';
 
   @Output() menuToggle = new EventEmitter<void>();
+
+  private readonly authUser = toSignal(this.authService.user$, { initialValue: null });
+
+  readonly profile = computed(() => this.authService.resolveProfile(this.authUser()));
 }

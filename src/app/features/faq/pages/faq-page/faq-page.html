@@ -1,0 +1,314 @@
+<section class="mx-auto flex w-full min-w-0 max-w-[var(--max-page-width)] flex-col gap-[var(--content-gap)]">
+  <p class="m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">Admin &gt; FAQ</p>
+
+  <div class="flex flex-wrap items-start justify-between gap-4 max-lg:flex-col max-lg:items-stretch">
+    <div class="min-w-0">
+      <h1 class="page-title">FAQ</h1>
+      <p class="page-subtitle mt-1 max-w-xl">
+        Manage the public FAQ content by category. Edits sync to the Firestore
+        <code>faqs</code> collection.
+      </p>
+    </div>
+    <app-button
+      variant="primary"
+      [icon]="icons.add"
+      iconColor="#ffffff"
+      [disabled]="isLoading() || isSaving() || !activeCategory()"
+      (click)="openCreate()"
+      class="w-full shrink-0 max-lg:[&_.admin-btn]:w-full max-lg:[&_.admin-btn]:justify-center lg:w-auto lg:[&_.admin-btn]:w-auto"
+    >
+      Add question
+    </app-button>
+  </div>
+
+  @if (loadError()) {
+    <div
+      class="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-bg)] px-4 py-3 text-[length:var(--type-sm)] text-[var(--danger)]"
+    >
+      {{ loadError() }}
+      <button type="button" class="ml-2 font-semibold underline" (click)="loadFaqs()">
+        Retry
+      </button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="flex min-h-[16rem] items-center justify-center py-10">
+      <app-loader label="Loading FAQs..." size="md" [showLabel]="false" />
+    </div>
+  } @else if (categories().length === 0) {
+    <div
+      class="rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] px-6 py-12 text-center shadow-[var(--card-shadow)]"
+    >
+      <p class="m-0 text-[length:var(--type-base)] font-semibold text-[var(--text-heading)]">
+        No FAQ categories found
+      </p>
+      <p class="mt-2 text-[length:var(--type-sm)] text-[var(--text-muted)]">
+        Expected documents in the Firestore <code>faqs</code> collection.
+      </p>
+    </div>
+  } @else {
+    <div class="flex flex-wrap items-center gap-2 text-[length:var(--type-xs)] text-[var(--text-muted)]">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 font-medium"
+      >
+        <strong class="font-semibold text-[var(--text-heading)]">{{ categories().length }}</strong>
+        categories
+      </span>
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 font-medium"
+      >
+        <strong class="font-semibold text-[var(--text-heading)]">{{ totalQuestionCount() }}</strong>
+        questions
+      </span>
+    </div>
+
+    <div
+      class="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[var(--card-border)] bg-slate-50 p-1 [-webkit-overflow-scrolling:touch]"
+      role="tablist"
+      aria-label="FAQ categories"
+    >
+      @for (category of categories(); track category.id) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeCategoryId() === category.id"
+          class="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[length:var(--type-sm)] font-semibold whitespace-nowrap transition sm:gap-2 sm:px-3.5"
+          [class.bg-[var(--color-surface)]]="activeCategoryId() === category.id"
+          [class.text-[var(--color-primary)]]="activeCategoryId() === category.id"
+          [class.shadow-sm]="activeCategoryId() === category.id"
+          [class.text-[var(--text-muted)]]="activeCategoryId() !== category.id"
+          (click)="setCategory(category.id)"
+        >
+          {{ category.title }}
+          <span
+            class="rounded-full bg-slate-200/80 px-1.5 py-0.5 text-[length:var(--type-2xs)] font-bold text-[var(--text-muted)]"
+            [class.bg-indigo-50]="activeCategoryId() === category.id"
+            [class.text-[var(--color-primary)]]="activeCategoryId() === category.id"
+          >
+            {{ category.questions.length }}
+          </span>
+        </button>
+      }
+    </div>
+
+    <article
+      class="overflow-hidden rounded-[var(--shell-radius)] border border-[var(--card-border)] bg-[var(--color-surface)] shadow-[var(--card-shadow)]"
+    >
+      <div
+        class="flex flex-col gap-3 border-b border-[var(--card-border)] px-4 py-3.5 sm:flex-row sm:flex-wrap sm:items-center md:px-5"
+      >
+        <div class="w-full min-w-0 sm:min-w-48 sm:flex-1 sm:basis-56">
+          <input
+            class="admin-search-input box-border h-10 w-full rounded-xl border border-[var(--card-border)] bg-[var(--color-surface)] pr-3.5 pl-9 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] placeholder:text-[var(--text-faint)]"
+            type="search"
+            [placeholder]="'Search ' + (activeCategory()?.title || 'FAQ').toLowerCase() + '...'"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+          />
+        </div>
+        <span
+          class="inline-flex w-fit items-center gap-1.5 self-start rounded-full bg-slate-100 px-2.5 py-1 text-[length:var(--type-xs)] font-medium text-[var(--text-muted)] sm:ml-auto"
+        >
+          <strong class="font-semibold text-[var(--text-heading)]">
+            {{ filteredQuestions().length }}
+          </strong>
+          shown
+        </span>
+      </div>
+
+      @if (filteredQuestions().length === 0) {
+        <div class="px-5 py-12 text-center md:px-6">
+          <p class="m-0 text-[length:var(--type-base)] font-semibold text-[var(--text-heading)]">
+            No questions in this category
+          </p>
+          <p class="mt-2 text-[length:var(--type-sm)] text-[var(--text-muted)]">
+            Add a question or clear the search to see results.
+          </p>
+        </div>
+      } @else {
+        <div>
+          @for (row of filteredQuestions(); track row.index) {
+            <div class="border-b border-[var(--card-border)] last:border-b-0">
+              <div class="flex min-w-0 flex-col gap-1 px-2 py-1 sm:flex-row sm:items-stretch md:px-3">
+                <button
+                  type="button"
+                  class="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
+                  [attr.aria-expanded]="openQuestionIndex() === row.index"
+                  (click)="toggleQuestion(row.index)"
+                >
+                  <span class="min-w-0">
+                    <span
+                      class="mb-1 block text-[length:var(--type-2xs)] font-bold tracking-[0.06em] text-[var(--text-faint)] uppercase"
+                    >
+                      Q{{ row.index + 1 }}
+                    </span>
+                    <span
+                      class="block text-[length:var(--type-base)] font-semibold break-words text-[var(--text-heading)]"
+                    >
+                      {{ row.entry.question }}
+                    </span>
+                  </span>
+                  <app-icon
+                    class="shrink-0 text-[var(--text-muted)]"
+                    [icon]="openQuestionIndex() === row.index ? icons.chevronUp : icons.chevronDown"
+                    [size]="18"
+                  />
+                </button>
+
+                <div class="flex shrink-0 items-center justify-end gap-1 py-1 pr-1 sm:py-2">
+                  <app-button
+                    variant="icon"
+                    [icon]="icons.edit"
+                    ariaLabel="Edit question"
+                    [disabled]="isSaving()"
+                    (click)="openEdit(row.index, row.entry)"
+                  />
+                  <app-button
+                    variant="icon"
+                    [icon]="icons.trash"
+                    ariaLabel="Delete question"
+                    [disabled]="isSaving()"
+                    (click)="openDelete(row.index)"
+                  />
+                </div>
+              </div>
+
+              @if (openQuestionIndex() === row.index) {
+                <div class="px-5 pb-5 md:px-6">
+                  <p
+                    class="m-0 max-w-3xl whitespace-pre-wrap text-[length:var(--type-sm)] leading-relaxed text-[var(--text-body)]"
+                  >
+                    {{ row.entry.answer }}
+                  </p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </article>
+  }
+</section>
+
+<app-modal
+  [open]="formModalOpen()"
+  [title]="formModalTitle()"
+  [subtitle]="formModalSubtitle()"
+  size="lg"
+  (closed)="closeModal()"
+>
+  <form id="faqEntryForm" class="flex flex-col gap-5" (ngSubmit)="saveEntry()">
+    <div
+      class="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-primary)_18%,var(--card-border))] bg-[color-mix(in_srgb,var(--color-primary)_6%,white)] px-3.5 py-3"
+      role="status"
+      aria-live="polite"
+    >
+      <span
+        class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm"
+      >
+        <app-icon [icon]="icons.faq" [size]="18" />
+      </span>
+      <div class="min-w-0">
+        <p
+          class="m-0 text-[length:var(--type-2xs)] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase"
+        >
+          Target category
+        </p>
+        <p class="mt-1 m-0 text-[length:var(--type-base)] font-bold text-[var(--text-heading)]">
+          {{ activeCategory()?.title || 'Unknown category' }}
+        </p>
+        <p class="mt-0.5 m-0 text-[length:var(--type-xs)] text-[var(--text-muted)]">
+          Switch the category tab on the FAQ page before opening this dialog to change where it is
+          saved.
+        </p>
+      </div>
+    </div>
+
+    <label class="flex min-w-0 flex-col gap-2">
+      <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+        Question <span class="text-[var(--danger)]">*</span>
+      </span>
+      <input
+        class="box-border w-full rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] placeholder:text-[var(--text-faint)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+        type="text"
+        name="faqQuestion"
+        [ngModel]="form().question"
+        (ngModelChange)="updateFormField('question', $event)"
+        placeholder="e.g. What payment methods do you accept?"
+        maxlength="220"
+        autocomplete="off"
+      />
+    </label>
+
+    <label class="flex min-w-0 flex-col gap-2">
+      <span class="text-[length:var(--type-xs)] font-semibold text-[var(--text-heading)]">
+        Answer <span class="text-[var(--danger)]">*</span>
+      </span>
+      <textarea
+        class="box-border min-h-36 w-full resize-y rounded-xl border border-[var(--card-border)] bg-slate-50 px-3.5 py-2.5 font-[family-name:var(--font-sans)] text-[length:var(--type-sm)] text-[var(--text-heading)] placeholder:text-[var(--text-faint)] focus:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--card-border))] focus:bg-[var(--color-surface)] focus:outline-2 focus:outline-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]"
+        name="faqAnswer"
+        rows="6"
+        [ngModel]="form().answer"
+        (ngModelChange)="updateFormField('answer', $event)"
+        placeholder="Write a clear answer that users will see on the FAQ page..."
+      ></textarea>
+    </label>
+
+    @if (formError()) {
+      <p class="m-0 text-[length:var(--type-sm)] font-medium text-[var(--danger)]" role="alert">
+        {{ formError() }}
+      </p>
+    }
+  </form>
+
+  <div
+    modalFooter
+    class="flex w-full flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&_app-button]:w-full [&_.admin-btn]:w-full sm:[&_app-button]:w-auto sm:[&_.admin-btn]:w-auto"
+  >
+    <app-button variant="outline" type="button" [disabled]="isSaving()" (click)="closeModal()">
+      Cancel
+    </app-button>
+    <app-button
+      variant="primary"
+      type="submit"
+      form="faqEntryForm"
+      iconColor="#ffffff"
+      [icon]="icons.save"
+      [disabled]="isSaving()"
+    >
+      {{ activeModal() === 'edit' ? 'Save changes' : 'Add question' }}
+    </app-button>
+  </div>
+</app-modal>
+
+<app-modal
+  [open]="deleteModalOpen()"
+  title="Delete question"
+  [subtitle]="deleteModalSubtitle()"
+  size="sm"
+  (closed)="closeModal()"
+>
+  <p class="m-0 text-[length:var(--type-sm)] text-[var(--text-body)]">
+    This action updates Firestore immediately and cannot be undone from this screen.
+  </p>
+
+  <div
+    modalFooter
+    class="flex w-full flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&_app-button]:w-full [&_.admin-btn]:w-full sm:[&_app-button]:w-auto sm:[&_.admin-btn]:w-auto"
+  >
+    <app-button variant="outline" type="button" [disabled]="isSaving()" (click)="closeModal()">
+      Cancel
+    </app-button>
+    <app-button
+      variant="danger"
+      type="button"
+      [icon]="icons.trash"
+      iconColor="#ffffff"
+      [disabled]="isSaving()"
+      (click)="confirmDelete()"
+    >
+      Delete
+    </app-button>
+  </div>
+</app-modal>

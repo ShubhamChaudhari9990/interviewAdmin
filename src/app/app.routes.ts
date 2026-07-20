@@ -34,6 +34,18 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/master-data/master-data.routes').then((m) => m.masterDataRoutes),
       },
+      {
+        path: 'subscriptions',
+        loadChildren: () =>
+          import('./features/subscriptions/subscriptions.routes').then(
+            (m) => m.subscriptionsRoutes,
+          ),
+      },
+      {
+        path: 'faq',
+        loadChildren: () =>
+          import('./features/faq/faq.routes').then((m) => m.faqRoutes),
+      },
       { path: '**', redirectTo: 'dashboard' },
     ],
     canActivate: [authGuard],
